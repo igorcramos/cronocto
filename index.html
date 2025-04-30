@@ -28,7 +28,7 @@
         button.clear-btn { background-color: var(--secondary-color); }
         button.export-btn { background-color: #17a2b8; }
         button.import-btn { background-color: #fd7e14; }
-        button.view-btn { background-color: #6f42c1; } /* Roxo para visualizar */
+        button.view-btn { background-color: #6f42c1; }
 
         .data-list { list-style: none; padding: 0; max-height: 150px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 4px; margin-top: 10px; padding: 10px; background-color: #fdfdfd; }
         .data-list li { font-size: 0.9em; margin-bottom: 8px; padding: 8px; background-color: var(--light-gray); border: 1px solid #eee; border-radius: 3px; display: flex; justify-content: space-between; align-items: center; }
@@ -148,7 +148,7 @@
              <button type="button" class="primary-btn" onclick="generateCalendar()">Gerar Cronograma Visual</button>
              <div id="export-section">
                  <p>Exporte tarefas do dia, um backup JSON ou o cronograma completo em CSV.</p>
-                 {/* <!-- BOTÃO ATUALIZADO --> */}
+                 {/* <!-- BOTÃO ATUALIZADO para Nova Aba --> */}
                  <button type="button" class="view-btn" onclick="showTasksTodayInNewTab()">Ver Tarefas de Hoje (Nova Aba)</button>
                  <button type="button" class="export-btn" onclick="exportDataJson()">Dados (JSON)</button>
                  <button type="button" class="export-btn" onclick="exportScheduleCsv()">Cronograma (CSV)</button>
@@ -229,12 +229,11 @@
          }
 
 
-        // *** GERAÇÃO DO CALENDÁRIO VISUAL (v9.0 - CONDICIONAL) ***
+        // *** GERAÇÃO DO CALENDÁRIO VISUAL (v9.1 - COM NOVA ABA) ***
         function generateCalendar() {
-            // console.log("=========================================="); console.log("Gerar Cronograma Visual clicado!"); console.log("Protocolos carregados:", JSON.stringify(protocols, null, 2)); const defaultProtocolHasDay0 = protocols.some(p => p.protocolName === 'Trujillo_200' && p.day === 0); console.log("Protocolo 'Trujillo_200' possui Dia 0?", defaultProtocolHasDay0); console.log("=========================================="); // Logs de Debug
-
+            // console.log("Gerar Cronograma Visual clicado!");
             const sDStr=gId('calendar-start-date').value, eDStr=gId('calendar-end-date').value;
-            const outputDiv = gId('calendar-output'); // Container pai
+            const outputDiv = gId('calendar-output');
             const desktopDiv = outputDiv.querySelector('.desktop-calendar');
             const mobileDiv = outputDiv.querySelector('.mobile-calendar');
             const placeholder = gId('calendar-placeholder');
@@ -244,37 +243,31 @@
             const today=new Date(); today.setUTCHours(0,0,0,0);
 
             if(placeholder) placeholder.style.display = 'none';
-            desktopDiv.innerHTML = ''; // Limpa conteúdo anterior
-            mobileDiv.innerHTML = ''; // Limpa conteúdo anterior
+            desktopDiv.innerHTML = ''; // Limpa
+            mobileDiv.innerHTML = ''; // Limpa
 
             initializeLastChangeDates(); // Reseta histórico
 
-            // Decide qual layout gerar
             const isMobileLayout = window.innerWidth <= MOBILE_BREAKPOINT;
             console.log("Layout mobile ativo?", isMobileLayout, "Largura:", window.innerWidth);
 
-            let desktopHTML = ''; let mobileHTML = '';
+            let desktopHTML_Accum = ''; let mobileHTML_Accum = '';
             let currentMonthDate = new Date(Date.UTC(sD.getUTCFullYear(), sD.getUTCMonth(), 1));
-            let monthLastChanges = {}; // Histórico de troca compartilhado p/ o mês
+            let monthLastChanges = {}; // Histórico compartilhado para o mês
 
             while (currentMonthDate <= eD) { // Loop meses
-                 const month = currentMonthDate.getUTCMonth();
-                 const year = currentMonthDate.getUTCFullYear();
+                 const month = currentMonthDate.getUTCMonth(); const year = currentMonthDate.getUTCFullYear();
                  const monthName = currentMonthDate.toLocaleString('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'});
+                 monthLastChanges = { ...lastMediaChangeDates }; // Reseta/Copia histórico no INÍCIO do mês
 
-                 // Reinicia cópia do histórico para o mês
-                 monthLastChanges = { ...lastMediaChangeDates };
-
-                 // --- Geração HTML Desktop (Tabela) ---
+                 // --- HTML Desktop ---
                  let desktopMonthHTML = `<div class="calendar-month"><h3>${monthName}</h3><table class="calendar-table"><thead><tr>${diasSemana.map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>`;
-                 let firstDayOfMonthDT = new Date(Date.UTC(year, month, 1));
-                 let startingDayDT = firstDayOfMonthDT.getUTCDay();
+                 let firstDayOfMonthDT = new Date(Date.UTC(year, month, 1)); let startingDayDT = firstDayOfMonthDT.getUTCDay();
                  let currentDateDT = new Date(firstDayOfMonthDT); currentDateDT.setUTCDate(currentDateDT.getUTCDate() - startingDayDT);
                  let desktopDone = false;
-
-                 while (!desktopDone) {
-                     desktopMonthHTML += '<tr>';
-                     for (let i = 0; i < 7; i++) {
+                 while (!desktopDone) { /* ... (loop semanas/dias desktop igual v9.0) ... */
+                    desktopMonthHTML += '<tr>';
+                    for (let i = 0; i < 7; i++) {
                          const dOM=currentDateDT.getUTCDate(), cMCk=currentDateDT.getUTCMonth(), cDoW=currentDateDT.getUTCDay();
                          const iCM=cMCk===month; const iWk=cDoW===0||cDoW===6; const cDUT0=new Date(currentDateDT);cDUT0.setUTCHours(0,0,0,0); const iTd=cDUT0.getTime()===today.getTime();
                          let cCls=[]; if(!iCM)cCls.push('other-month'); if(iWk&&iCM)cCls.push('weekend'); if(iTd)cCls.push('today');
@@ -282,84 +275,47 @@
                          if (iCM) {
                              desktopMonthHTML += `<span class="day-number">${dOM}</span><div>`;
                              const cD4Diff = new Date(currentDateDT);
-                             levas.forEach(lv => {
-                                 const dailyInfo = getDailyLevaInfo(cD4Diff, lv, monthLastChanges); // Usa cópia do mês
-                                 if (dailyInfo) {
-                                     const { dayX, finalTask, finalMedium, dailyCollections } = dailyInfo;
-                                     let levaHTML = `<div class="leva-entry" style="border-left-color:${lv.color};" title="Linhas:${lv.cellLines||'N/A'}"><div class="leva-info">${lv.id} DIA ${dayX}</div>${finalTask!=='-'?`<div class="leva-task">${finalTask}</div>`:''}${finalMedium!=='-'?`<div class="leva-medium">${finalMedium}</div>`:''}</div>`;
-                                     dailyCollections.forEach(cl=>{ levaHTML += `<div class="collection-info-inline" title="Coleta p/${cl.levaIds.join(',')}: ${cl.qty || 'N/A'}"><span class="collection-icon">C</span> ${cl.exp || 'Coleta'}: ${cl.qty || 'N/A'}</div>`; });
-                                     levaHTML += `</div>`;
-                                     desktopMonthHTML += levaHTML;
-                                 }
-                             });
+                             levas.forEach(lv => { const dailyInfo = getDailyLevaInfo(cD4Diff, lv, monthLastChanges); if (dailyInfo) { const { dayX, finalTask, finalMedium, dailyCollections } = dailyInfo; let levaHTML = `<div class="leva-entry" style="border-left-color:${lv.color};" title="Linhas:${lv.cellLines||'N/A'}"><div class="leva-info">${lv.id} DIA ${dayX}</div>${finalTask!=='-'?`<div class="leva-task">${finalTask}</div>`:''}${finalMedium!=='-'?`<div class="leva-medium">${finalMedium}</div>`:''}</div>`; dailyCollections.forEach(cl=>{ levaHTML += `<div class="collection-info-inline" title="Coleta p/${cl.levaIds.join(',')}: ${cl.qty || 'N/A'}"><span class="collection-icon">C</span> ${cl.exp || 'Coleta'}: ${cl.qty || 'N/A'}</div>`; }); levaHTML += `</div>`; desktopMonthHTML += levaHTML; } });
                              desktopMonthHTML += '</div>';
                          }
                          desktopMonthHTML += '</td>';
                          currentDateDT.setUTCDate(currentDateDT.getUTCDate() + 1);
                          if (currentDateDT.getUTCFullYear() > year || (currentDateDT.getUTCFullYear() === year && currentDateDT.getUTCMonth() > month)) { if (i < 6) { desktopMonthHTML += '<td class="other-month"></td>'.repeat(6 - i) } desktopDone = true; break }
                      }
-                     desktopMonthHTML += '</tr>';
+                    desktopMonthHTML += '</tr>';
                  }
                  desktopMonthHTML += '</tbody></table></div>';
-                 desktopHTML += desktopMonthHTML; // Acumula HTML desktop
+                 desktopHTML_Accum += desktopMonthHTML;
 
-                 // --- Geração HTML Mobile (Divs) ---
+                 // --- HTML Mobile ---
                  let mobileMonthHTML = `<div class="calendar-month"><h3>${monthName}</h3>`;
                  let currentDateMB = new Date(Date.UTC(year, month, 1));
                  let monthEndDateMB = new Date(Date.UTC(year, month + 1, 0));
-                 // Usa a mesma cópia de histórico do mês
+                 // Reusa o estado do histórico do mês já processado pelo desktop
                  let mobileLastChangesForMonth = { ...monthLastChanges };
 
-                 while(currentDateMB <= monthEndDateMB) {
-                     const dOM = currentDateMB.getUTCDate(), cDoW = currentDateMB.getUTCDay();
-                     const iWk = cDoW === 0 || cDoW === 6; const cDUT0 = new Date(currentDateMB); cDUT0.setUTCHours(0,0,0,0); const iTd = cDUT0.getTime() === today.getTime();
-                     let dayHeaderClasses = ['mobile-day-header']; if(iWk) dayHeaderClasses.push('weekend'); if(iTd) dayHeaderClasses.push('today');
-
-                     let levasContentHTML = ''; let hasContentForDay = false;
-                     const cD4Diff = new Date(currentDateMB);
-
-                     levas.forEach(lv => {
-                         const dailyInfo = getDailyLevaInfo(cD4Diff, lv, mobileLastChangesForMonth); // Usa cópia do mês
-                         if (dailyInfo) {
-                             hasContentForDay = true;
-                             const { dayX, finalTask, finalMedium, dailyCollections } = dailyInfo;
-                             levasContentHTML += `<div class="mobile-leva-entry" style="border-left-color:${lv.color};" title="Linhas:${lv.cellLines||'N/A'}">`;
-                             levasContentHTML += `<div class="leva-info">${lv.id} DIA ${dayX}</div>`;
-                             if(finalTask!=='-') { levasContentHTML += `<div class="leva-task">${finalTask}</div>`; }
-                             if(finalMedium!=='-') { levasContentHTML += `<div class="leva-medium">${finalMedium}</div>`; }
-                             dailyCollections.forEach(cl=>{ levasContentHTML += `<div class="collection-info-inline" title="Coleta p/${cl.levaIds.join(',')}: ${cl.qty || 'N/A'}"><span class="collection-icon">C</span> ${cl.exp || 'Coleta'}: ${cl.qty || 'N/A'}</div>`; });
-                             levasContentHTML += `</div>`;
-                         }
-                     });
-
-                     // Atualiza o histórico principal APÓS processar todas as levas para este dia
-                     levas.forEach(lv => {
-                        if (lastMediaChangeDates[lv.id] && mobileLastChangesForMonth[lv.id] && mobileLastChangesForMonth[lv.id].getTime() !== lastMediaChangeDates[lv.id].getTime()) { lastMediaChangeDates[lv.id] = mobileLastChangesForMonth[lv.id]; }
-                        else if (!lastMediaChangeDates[lv.id] && mobileLastChangesForMonth[lv.id]) { lastMediaChangeDates[lv.id] = mobileLastChangesForMonth[lv.id]; }
-                     });
-
-
-                     if(hasContentForDay) {
-                          mobileMonthHTML += `<div class="mobile-day-row"><div class="${dayHeaderClasses.join(' ')}">${currentDateMB.toLocaleDateString('pt-BR', {day: 'numeric', month: 'short'})} (${diasSemana[cDoW]})</div><div class="mobile-levas-container">${levasContentHTML}</div></div>`;
-                     }
-                     currentDateMB.setUTCDate(currentDateMB.getUTCDate() + 1); // Próximo dia
+                 while(currentDateMB <= monthEndDateMB) { /* ... (loop dias mobile igual v9.0) ... */
+                     const dOM = currentDateMB.getUTCDate(), cDoW = currentDateMB.getUTCDay(); const iWk = cDoW === 0 || cDoW === 6; const cDUT0 = new Date(currentDateMB); cDUT0.setUTCHours(0,0,0,0); const iTd = cDUT0.getTime() === today.getTime(); let dayHeaderClasses = ['mobile-day-header']; if(iWk) dayHeaderClasses.push('weekend'); if(iTd) dayHeaderClasses.push('today');
+                     let levasContentHTML = ''; let hasContentForDay = false; const cD4Diff = new Date(currentDateMB);
+                     levas.forEach(lv => { const dailyInfo = getDailyLevaInfo(cD4Diff, lv, mobileLastChangesForMonth); if (dailyInfo) { hasContentForDay = true; const { dayX, finalTask, finalMedium, dailyCollections } = dailyInfo; levasContentHTML += `<div class="mobile-leva-entry" style="border-left-color:${lv.color};" title="Linhas:${lv.cellLines||'N/A'}">`; levasContentHTML += `<div class="leva-info">${lv.id} DIA ${dayX}</div>`; if(finalTask!=='-') { levasContentHTML += `<div class="leva-task">${finalTask}</div>`; } if(finalMedium!=='-') { levasContentHTML += `<div class="leva-medium">${finalMedium}</div>`; } dailyCollections.forEach(cl=>{ levasContentHTML += `<div class="collection-info-inline" title="Coleta p/${cl.levaIds.join(',')}: ${cl.qty || 'N/A'}"><span class="collection-icon">C</span> ${cl.exp || 'Coleta'}: ${cl.qty || 'N/A'}</div>`; }); levasContentHTML += `</div>`; } });
+                     if(hasContentForDay) { mobileMonthHTML += `<div class="mobile-day-row"><div class="${dayHeaderClasses.join(' ')}">${currentDateMB.toLocaleDateString('pt-BR', {day: 'numeric', month: 'short'})} (${diasSemana[cDoW]})</div><div class="mobile-levas-container">${levasContentHTML}</div></div>`; }
+                     currentDateMB.setUTCDate(currentDateMB.getUTCDate() + 1);
                  }
                  mobileMonthHTML += `</div>`;
-                 mobileHTML += mobileMonthHTML; // Acumula HTML mobile
+                 mobileHTML_Accum += mobileMonthHTML;
+
+                  // Atualiza o histórico global no final do processamento do mês
+                 lastMediaChangeDates = { ...monthLastChanges };
 
                  currentMonthDate.setUTCMonth(currentMonthDate.getUTCMonth() + 1); // Próximo mês
             } // Fim while meses
 
-            // Insere o HTML apropriado e ajusta visibilidade
-            desktopDiv.innerHTML = desktopHTML;
-            mobileDiv.innerHTML = mobileHTML;
-            if(isMobileLayout) {
-                desktopDiv.style.display = 'none';
-                mobileDiv.style.display = 'block';
-            } else {
-                 desktopDiv.style.display = 'block';
-                 mobileDiv.style.display = 'none';
-            }
+            desktopDiv.innerHTML = desktopHTML_Accum;
+            mobileDiv.innerHTML = mobileHTML_Accum;
+
+            // Mostra o layout correto
+            if(isMobileLayout) { mobileDiv.style.display = 'block'; }
+            else { desktopDiv.style.display = 'block'; }
          }
 
 
@@ -367,34 +323,26 @@
         function downloadFile(f,c,m){const b=new Blob([c],{type:m});const u=URL.createObjectURL(b);const a=cE('a');a.href=u;a.download=f;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);}
         function escapeCsvField(f) { if(f===null||f===undefined)return'""'; const s=String(f); if(s.includes(',')||s.includes('"')||s.includes('\n'))return`"${s.replace(/"/g,'""')}"`; return s; }
 
-        // *** FUNÇÃO ATUALIZADA: showTasksTodayInNewTab ***
+        // *** NOVA FUNÇÃO: showTasksTodayInNewTab ***
         function showTasksTodayInNewTab() {
             const today = new Date();
-            const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 12, 0, 0));
+            const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 12, 0, 0)); // Meio-dia UTC
             const todayStr = today.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             let tasksFound = false;
-            let htmlContent = `
-                <!DOCTYPE html>
-                <html lang="pt-BR">
-                <head>
-                    <meta charset="UTF-8">
-                    <title>Tarefas de Hoje - ${todayStr}</title>
-                    <style>
-                        body { font-family: sans-serif; margin: 20px; line-height: 1.5; }
-                        .leva-section { border: 1px solid #ccc; border-radius: 5px; padding: 10px 15px; margin-bottom: 15px; }
-                        .leva-section h2 { margin: 0 0 10px 0; font-size: 1.2em; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-                        .task-item { margin-bottom: 5px; }
-                        .task-label { font-weight: bold; }
-                        .collection-item { color: #28a745; margin-top: 8px; }
-                        .no-tasks { font-style: italic; color: #666; }
-                    </style>
-                </head>
-                <body>
-                    <h1>Tarefas para ${todayStr}</h1>
-            `;
+            initializeLastChangeDates(); // Reseta para cálculo correto do dia
+            let tempLastChanges = { ...lastMediaChangeDates };
 
-            initializeLastChangeDates(); // Precisa resetar para calcular corretamente para hoje
-            let tempLastChanges = { ...lastMediaChangeDates }; // Usa cópia
+            let htmlContent = `
+                <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Tarefas de Hoje - ${todayStr}</title>
+                <style> body { font-family: sans-serif; margin: 20px; line-height: 1.5; font-size: 14px; }
+                        .leva-section { border: 1px solid #ccc; border-radius: 8px; padding: 15px; margin-bottom: 15px; page-break-inside: avoid; }
+                        .leva-section h2 { margin: 0 0 10px 0; font-size: 1.3em; border-bottom: 1px solid #eee; padding-bottom: 8px; color: #333; }
+                        .task-item { margin-bottom: 6px; } .task-label { font-weight: bold; color: #555; }
+                        .collection-item { color: #28a745; margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 8px; font-weight: bold;}
+                        .collection-details { font-weight: normal; color: #333; margin-left: 5px;}
+                        .no-tasks { font-style: italic; color: #666; } hr { border: 0; border-top: 1px dashed #ccc; margin: 15px 0;}
+                        @media print { button { display: none; } body { margin: 0.5in; font-size: 11pt; } .leva-section { border: 1px solid #aaa; box-shadow: none; } }
+                </style></head><body><h1>Tarefas para ${todayStr}</h1> <button onclick="window.print();">Imprimir</button><hr>`;
 
             levas.forEach(leva => {
                 const dailyInfo = getDailyLevaInfo(todayUTC, leva, tempLastChanges);
@@ -402,33 +350,24 @@
                     const { dayX, finalTask, finalMedium, dailyCollections } = dailyInfo;
                     if (finalTask !== '-' || finalMedium !== '-' || dailyCollections.length > 0) {
                         tasksFound = true;
-                        htmlContent += `<div class="leva-section">`;
-                        htmlContent += `<h2>Leva ${leva.id} (Dia ${dayX})</h2>`;
+                        htmlContent += `<div class="leva-section"><h2>Leva ${leva.id} (Dia ${dayX}) <small>(${leva.cellLines || 'N/A'})</small></h2>`;
                         if (finalTask !== '-') htmlContent += `<div class="task-item"><span class="task-label">Tarefa:</span> ${finalTask}</div>`;
                         if (finalMedium !== '-') htmlContent += `<div class="task-item"><span class="task-label">Meio:</span> ${finalMedium}</div>`;
-                        dailyCollections.forEach(col => {
-                             htmlContent += `<div class="collection-item"><span class="task-label">Coleta:</span> ${col.exp || 'Coleta'} - ${col.qty || 'N/A'}</div>`;
-                        });
+                        dailyCollections.forEach(col => { htmlContent += `<div class="collection-item"><span class="task-label">Coleta:</span> <span class="collection-details">${col.exp || 'Coleta'}: ${col.qty || 'N/A'}</span></div>`; });
                         htmlContent += `</div>`;
                     }
                 }
+                 // Atualiza histórico principal após processar
+                 if (lastMediaChangeDates[leva.id] && tempLastChanges[leva.id] && tempLastChanges[leva.id].getTime() !== lastMediaChangeDates[leva.id].getTime()) { lastMediaChangeDates[leva.id] = tempLastChanges[leva.id]; }
+                 else if (!lastMediaChangeDates[leva.id] && tempLastChanges[leva.id]) { lastMediaChangeDates[leva.id] = tempLastChanges[leva.id]; }
             });
 
-            if (!tasksFound) {
-                htmlContent += `<p class="no-tasks">Nenhuma tarefa ou coleta agendada para hoje.</p>`;
-            }
-
+            if (!tasksFound) { htmlContent += `<p class="no-tasks">Nenhuma tarefa ou coleta agendada para hoje.</p>`; }
             htmlContent += `</body></html>`;
 
-            // Abrir nova aba e escrever o HTML
             const newTab = window.open('', '_blank');
-            if (newTab) {
-                newTab.document.open();
-                newTab.document.write(htmlContent);
-                newTab.document.close();
-            } else {
-                alert('Não foi possível abrir a nova aba. Verifique as configurações de pop-up do seu navegador.');
-            }
+            if (newTab) { newTab.document.open(); newTab.document.write(htmlContent); newTab.document.close(); newTab.focus(); }
+            else { alert('Não foi possível abrir a nova aba. Verifique as configurações de pop-up.'); }
         }
 
         function exportDataJson() { /* ... (igual v8.3) ... */ const dE={levas,protocols,collections}; const jS=JSON.stringify(dE,null,2); downloadFile('cronograma_organoides_dados.json',jS,'application/json;charset=utf-8;'); }
