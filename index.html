@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Cronograma v9.1 (Tarefas em Aba)</title>
+    <title>Gerador de Cronograma v9.2 (Fix Coletas)</title>
     <style>
-        /* CSS (Idêntico à v9.0) */
+        /* CSS (Idêntico à v9.0 - inclui estilos mobile) */
         :root { --primary-color: #007bff; --secondary-color: #6c757d; --success-color: #28a745; --warning-color: #ffc107; --danger-color: #dc3545; --light-gray: #f8f9fa; --medium-gray: #e9ecef; --dark-gray: #6c757d; --text-color: #333; --border-color: #dee2e6; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; margin: 0; padding: 15px; background-color: #f4f7f6; color: var(--text-color); }
         .container { display: grid; grid-template-columns: minmax(350px, 1.5fr) 3fr; gap: 25px; max-width: 1700px; margin: auto; }
@@ -29,7 +29,6 @@
         button.export-btn { background-color: #17a2b8; }
         button.import-btn { background-color: #fd7e14; }
         button.view-btn { background-color: #6f42c1; }
-
         .data-list { list-style: none; padding: 0; max-height: 150px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 4px; margin-top: 10px; padding: 10px; background-color: #fdfdfd; }
         .data-list li { font-size: 0.9em; margin-bottom: 8px; padding: 8px; background-color: var(--light-gray); border: 1px solid #eee; border-radius: 3px; display: flex; justify-content: space-between; align-items: center; }
         .data-list li .item-content { flex-grow: 1; margin-right: 10px; line-height: 1.4; }
@@ -105,7 +104,7 @@
 </head>
 <body>
     <div id="save-notification">Dados salvos localmente!</div>
-    <h1>Gerador de Cronograma v9.1 (Tarefas em Aba)</h1>
+    <h1>Gerador de Cronograma v9.2 (Fix Coletas)</h1>
 
     <div class="container">
         <div class="input-section">
@@ -148,7 +147,6 @@
              <button type="button" class="primary-btn" onclick="generateCalendar()">Gerar Cronograma Visual</button>
              <div id="export-section">
                  <p>Exporte tarefas do dia, um backup JSON ou o cronograma completo em CSV.</p>
-                 {/* <!-- BOTÃO ATUALIZADO para Nova Aba --> */}
                  <button type="button" class="view-btn" onclick="showTasksTodayInNewTab()">Ver Tarefas de Hoje (Nova Aba)</button>
                  <button type="button" class="export-btn" onclick="exportDataJson()">Dados (JSON)</button>
                  <button type="button" class="export-btn" onclick="exportScheduleCsv()">Cronograma (CSV)</button>
@@ -177,6 +175,7 @@
         const tarefasCriticasKeywords = ["AGREGAR", "Transferir", "Plaquear", "Organoides formados", "Indução"];
         const meioManutencao = "Meio 2 (Manutenção)";
         const preferredChangeDaysOfWeek = [1, 3, 5]; // Seg, Qua, Sex
+        // Chaves localStorage (v8 - Reutilizando da mudança estrutural anterior)
         const LEVAS_KEY = 'cronogramaLevas_v8'; const PROTOCOLS_KEY = 'cronogramaProtocols_v8'; const COLLECTIONS_KEY = 'cronogramaCollections_v8';
         const MOBILE_BREAKPOINT = 768;
 
@@ -224,142 +223,155 @@
             if (dayX >= 0 && dayX <= 3) { finalMedium = specificMedium; if (dayX === 0) { finalTask = baseTask; } else { finalTask = !isCriticalTask ? "Trocar Meio" : baseTask; } if(currentLastMediaChangeDates) currentLastMediaChangeDates[leva.id] = new Date(currentDateUTC); }
             else if (dayX >= 4 && dayX <= 31) { const lastChangeDate = currentLastMediaChangeDates ? (currentLastMediaChangeDates[leva.id] || new Date(levaStartDate.getTime() + 3 * 24*60*60*1000)) : new Date(levaStartDate.getTime() + 3 * 24*60*60*1000); const daysSince = daysBetween(currentDateStartOfDay, lastChangeDate); const isPreferredDay = preferredChangeDaysOfWeek.includes(currentDayOfWeek); const nextDay = new Date(currentDateUTC); nextDay.setUTCDate(currentDateUTC.getUTCDate() + 1); const mustChange = (daysSince >= 3) || (daysSince === 2 && nextDay.getUTCDay() === 0); const isDayToSkip = [5, 12, 19, 26].includes(dayX); let shouldChangeToday = false; if (isCriticalTask) { finalTask = baseTask; finalMedium = specificMedium; if (criticalTaskImpliesMediaChange && currentLastMediaChangeDates) { currentLastMediaChangeDates[leva.id] = new Date(currentDateUTC); } } else { if (mustChange) { shouldChangeToday = true; } else if (!isDayToSkip && isPreferredDay) { shouldChangeToday = true; } performMediaChange = shouldChangeToday; if (performMediaChange) { finalTask = "Trocar Meio"; if (dayX >= 25) finalMedium = "Meio 3"; else if (dayX >= 18) finalMedium = "Meio 2 + FGF2+EGF"; else if (dayX >= 11) finalMedium = "Meio 2 + FGF2"; else finalMedium = "Meio 1"; if(currentLastMediaChangeDates) currentLastMediaChangeDates[leva.id] = new Date(currentDateUTC); } else { finalTask = baseTask; finalMedium = specificMedium; if (dayX === 4 && finalMedium === '-') finalMedium = "Meio 1"; if (dayX === 11 && finalMedium === '-') finalMedium = "Meio 2 + FGF2"; if (dayX === 18 && finalMedium === '-') finalMedium = "Meio 2 + FGF2+EGF"; if (dayX === 25 && finalMedium === '-') finalMedium = "Meio 3"; } } }
             else if (dayX >= 32) { const isMaintenanceChangeDay = preferredChangeDaysOfWeek.includes(currentDayOfWeek) && !isCriticalTask; if (isMaintenanceChangeDay) { finalTask = "Trocar Meio (Manut.)"; finalMedium = meioManutencao; if(currentLastMediaChangeDates) currentLastMediaChangeDates[leva.id] = new Date(currentDateUTC); } else { finalTask = baseTask; finalMedium = specificMedium; } if (dayX === 32 && baseTask !== '-') finalTask = baseTask; }
-            const dailyCollections = collections.filter(c => c.day === dayX && c.levaIds.includes(leva.id));
-            if (finalTask === '-' && finalMedium === '-' && dailyCollections.length === 0) { return null; } return { dayX, finalTask, finalMedium, dailyCollections };
+            const dailyCollections = collections.filter(c => c.day === dayX && Array.isArray(c.levaIds) && c.levaIds.includes(leva.id));
+            // *** LOG COLETA ENCONTRADA ***
+            // if (dailyCollections.length > 0) { console.log(`[v9.2 getDailyLevaInfo] Leva ${leva.id} Dia ${dayX}: Encontradas ${dailyCollections.length} coletas:`, JSON.stringify(dailyCollections)); }
+            if (finalTask === '-' && finalMedium === '-' && dailyCollections.length === 0) { return null; }
+            return { dayX, finalTask, finalMedium, dailyCollections };
          }
 
 
-        // *** GERAÇÃO DO CALENDÁRIO VISUAL (v9.1 - COM NOVA ABA) ***
+        // *** GERAÇÃO DO CALENDÁRIO VISUAL (v9.2 - Reintegra Coletas) ***
         function generateCalendar() {
-            // console.log("Gerar Cronograma Visual clicado!");
+            // console.log("=========================================="); console.log("Gerar Cronograma Visual clicado!"); console.log("Coletas Globais:", JSON.stringify(collections)); console.log("==========================================");
+
             const sDStr=gId('calendar-start-date').value, eDStr=gId('calendar-end-date').value;
-            const outputDiv = gId('calendar-output');
-            const desktopDiv = outputDiv.querySelector('.desktop-calendar');
-            const mobileDiv = outputDiv.querySelector('.mobile-calendar');
-            const placeholder = gId('calendar-placeholder');
+            const outputDiv = gId('calendar-output'); const desktopDiv = outputDiv.querySelector('.desktop-calendar'); const mobileDiv = outputDiv.querySelector('.mobile-calendar'); const placeholder = gId('calendar-placeholder');
 
             if(!sDStr||!eDStr){alert("Defina datas.");return} if(levas.length===0){alert("Nenhuma leva.");return} if(protocols.length===0){alert("Nenhum protocolo.");return}
             const sD=new Date(sDStr+'T12:00:00Z'), eD=new Date(eDStr+'T12:00:00Z'); if(eD<sD){alert("Data final antes da inicial.");return}
             const today=new Date(); today.setUTCHours(0,0,0,0);
 
-            if(placeholder) placeholder.style.display = 'none';
-            desktopDiv.innerHTML = ''; // Limpa
-            mobileDiv.innerHTML = ''; // Limpa
-
-            initializeLastChangeDates(); // Reseta histórico
-
+            if(placeholder) placeholder.style.display = 'none'; desktopDiv.innerHTML = ''; mobileDiv.innerHTML = ''; desktopDiv.style.display = 'none'; mobileDiv.style.display = 'none';
+            initializeLastChangeDates();
             const isMobileLayout = window.innerWidth <= MOBILE_BREAKPOINT;
-            console.log("Layout mobile ativo?", isMobileLayout, "Largura:", window.innerWidth);
+            // console.log("Layout mobile ativo?", isMobileLayout);
 
             let desktopHTML_Accum = ''; let mobileHTML_Accum = '';
             let currentMonthDate = new Date(Date.UTC(sD.getUTCFullYear(), sD.getUTCMonth(), 1));
-            let monthLastChanges = {}; // Histórico compartilhado para o mês
+            let monthLastChanges = {};
 
             while (currentMonthDate <= eD) { // Loop meses
                  const month = currentMonthDate.getUTCMonth(); const year = currentMonthDate.getUTCFullYear();
                  const monthName = currentMonthDate.toLocaleString('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'});
-                 monthLastChanges = { ...lastMediaChangeDates }; // Reseta/Copia histórico no INÍCIO do mês
+                 monthLastChanges = { ...lastMediaChangeDates };
 
-                 // --- HTML Desktop ---
+                 // --- Geração HTML Desktop ---
                  let desktopMonthHTML = `<div class="calendar-month"><h3>${monthName}</h3><table class="calendar-table"><thead><tr>${diasSemana.map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>`;
                  let firstDayOfMonthDT = new Date(Date.UTC(year, month, 1)); let startingDayDT = firstDayOfMonthDT.getUTCDay();
                  let currentDateDT = new Date(firstDayOfMonthDT); currentDateDT.setUTCDate(currentDateDT.getUTCDate() - startingDayDT);
                  let desktopDone = false;
-                 while (!desktopDone) { /* ... (loop semanas/dias desktop igual v9.0) ... */
-                    desktopMonthHTML += '<tr>';
-                    for (let i = 0; i < 7; i++) {
-                         const dOM=currentDateDT.getUTCDate(), cMCk=currentDateDT.getUTCMonth(), cDoW=currentDateDT.getUTCDay();
-                         const iCM=cMCk===month; const iWk=cDoW===0||cDoW===6; const cDUT0=new Date(currentDateDT);cDUT0.setUTCHours(0,0,0,0); const iTd=cDUT0.getTime()===today.getTime();
-                         let cCls=[]; if(!iCM)cCls.push('other-month'); if(iWk&&iCM)cCls.push('weekend'); if(iTd)cCls.push('today');
+                 while (!desktopDone) {
+                     desktopMonthHTML += '<tr>';
+                     for (let i = 0; i < 7; i++) {
+                         const dOM=currentDateDT.getUTCDate(), cMCk=currentDateDT.getUTCMonth(), cDoW=currentDateDT.getUTCDay(); const iCM=cMCk===month; const iWk=cDoW===0||cDoW===6; const cDUT0=new Date(currentDateDT);cDUT0.setUTCHours(0,0,0,0); const iTd=cDUT0.getTime()===today.getTime(); let cCls=[]; if(!iCM)cCls.push('other-month'); if(iWk&&iCM)cCls.push('weekend'); if(iTd)cCls.push('today');
                          desktopMonthHTML += `<td class="${cCls.join(' ')}">`;
                          if (iCM) {
                              desktopMonthHTML += `<span class="day-number">${dOM}</span><div>`;
                              const cD4Diff = new Date(currentDateDT);
-                             levas.forEach(lv => { const dailyInfo = getDailyLevaInfo(cD4Diff, lv, monthLastChanges); if (dailyInfo) { const { dayX, finalTask, finalMedium, dailyCollections } = dailyInfo; let levaHTML = `<div class="leva-entry" style="border-left-color:${lv.color};" title="Linhas:${lv.cellLines||'N/A'}"><div class="leva-info">${lv.id} DIA ${dayX}</div>${finalTask!=='-'?`<div class="leva-task">${finalTask}</div>`:''}${finalMedium!=='-'?`<div class="leva-medium">${finalMedium}</div>`:''}</div>`; dailyCollections.forEach(cl=>{ levaHTML += `<div class="collection-info-inline" title="Coleta p/${cl.levaIds.join(',')}: ${cl.qty || 'N/A'}"><span class="collection-icon">C</span> ${cl.exp || 'Coleta'}: ${cl.qty || 'N/A'}</div>`; }); levaHTML += `</div>`; desktopMonthHTML += levaHTML; } });
+                             levas.forEach(lv => {
+                                 const dailyInfo = getDailyLevaInfo(cD4Diff, lv, monthLastChanges);
+                                 if (dailyInfo) {
+                                     const { dayX, finalTask, finalMedium, dailyCollections } = dailyInfo;
+                                     let levaHTML = `<div class="leva-entry" style="border-left-color:${lv.color};" title="Linhas:${lv.cellLines||'N/A'}"><div class="leva-info">${lv.id} DIA ${dayX}</div>${finalTask!=='-'?`<div class="leva-task">${finalTask}</div>`:''}${finalMedium!=='-'?`<div class="leva-medium">${finalMedium}</div>`:''}`; // Não fecha o div ainda
+                                     // *** COLETA REINTEGRADA (DESKTOP) ***
+                                     if (dailyCollections && dailyCollections.length > 0) {
+                                          // console.log(`[Desktop Render] Leva ${lv.id} Dia ${dayX}: Renderizando ${dailyCollections.length} coletas.`);
+                                         dailyCollections.forEach(cl=>{
+                                             if (cl) { levaHTML += `<div class="collection-info-inline" title="Coleta p/${cl.levaIds?.join(',') || '?'}: ${cl.qty || 'N/A'}"><span class="collection-icon">C</span> ${cl.exp || 'Coleta'}: ${cl.qty || 'N/A'}</div>`; }
+                                             else { console.warn(`[Desktop Render] Objeto coleta inválido para ${lv.id} Dia ${dayX}`);}
+                                         });
+                                     }
+                                     levaHTML += `</div>`; // Fecha o div da leva
+                                     desktopMonthHTML += levaHTML;
+                                 }
+                             });
                              desktopMonthHTML += '</div>';
                          }
                          desktopMonthHTML += '</td>';
                          currentDateDT.setUTCDate(currentDateDT.getUTCDate() + 1);
                          if (currentDateDT.getUTCFullYear() > year || (currentDateDT.getUTCFullYear() === year && currentDateDT.getUTCMonth() > month)) { if (i < 6) { desktopMonthHTML += '<td class="other-month"></td>'.repeat(6 - i) } desktopDone = true; break }
                      }
-                    desktopMonthHTML += '</tr>';
+                     desktopMonthHTML += '</tr>';
                  }
                  desktopMonthHTML += '</tbody></table></div>';
                  desktopHTML_Accum += desktopMonthHTML;
 
-                 // --- HTML Mobile ---
+                 // --- Geração HTML Mobile ---
                  let mobileMonthHTML = `<div class="calendar-month"><h3>${monthName}</h3>`;
-                 let currentDateMB = new Date(Date.UTC(year, month, 1));
-                 let monthEndDateMB = new Date(Date.UTC(year, month + 1, 0));
-                 // Reusa o estado do histórico do mês já processado pelo desktop
+                 let currentDateMB = new Date(Date.UTC(year, month, 1)); let monthEndDateMB = new Date(Date.UTC(year, month + 1, 0));
                  let mobileLastChangesForMonth = { ...monthLastChanges };
-
-                 while(currentDateMB <= monthEndDateMB) { /* ... (loop dias mobile igual v9.0) ... */
+                 while(currentDateMB <= monthEndDateMB) {
                      const dOM = currentDateMB.getUTCDate(), cDoW = currentDateMB.getUTCDay(); const iWk = cDoW === 0 || cDoW === 6; const cDUT0 = new Date(currentDateMB); cDUT0.setUTCHours(0,0,0,0); const iTd = cDUT0.getTime() === today.getTime(); let dayHeaderClasses = ['mobile-day-header']; if(iWk) dayHeaderClasses.push('weekend'); if(iTd) dayHeaderClasses.push('today');
                      let levasContentHTML = ''; let hasContentForDay = false; const cD4Diff = new Date(currentDateMB);
-                     levas.forEach(lv => { const dailyInfo = getDailyLevaInfo(cD4Diff, lv, mobileLastChangesForMonth); if (dailyInfo) { hasContentForDay = true; const { dayX, finalTask, finalMedium, dailyCollections } = dailyInfo; levasContentHTML += `<div class="mobile-leva-entry" style="border-left-color:${lv.color};" title="Linhas:${lv.cellLines||'N/A'}">`; levasContentHTML += `<div class="leva-info">${lv.id} DIA ${dayX}</div>`; if(finalTask!=='-') { levasContentHTML += `<div class="leva-task">${finalTask}</div>`; } if(finalMedium!=='-') { levasContentHTML += `<div class="leva-medium">${finalMedium}</div>`; } dailyCollections.forEach(cl=>{ levasContentHTML += `<div class="collection-info-inline" title="Coleta p/${cl.levaIds.join(',')}: ${cl.qty || 'N/A'}"><span class="collection-icon">C</span> ${cl.exp || 'Coleta'}: ${cl.qty || 'N/A'}</div>`; }); levasContentHTML += `</div>`; } });
+                     levas.forEach(lv => {
+                         const dailyInfo = getDailyLevaInfo(cD4Diff, lv, mobileLastChangesForMonth);
+                         if (dailyInfo) {
+                             hasContentForDay = true;
+                             const { dayX, finalTask, finalMedium, dailyCollections } = dailyInfo;
+                             levasContentHTML += `<div class="mobile-leva-entry" style="border-left-color:${lv.color};" title="Linhas:${lv.cellLines||'N/A'}">`;
+                             levasContentHTML += `<div class="leva-info">${lv.id} DIA ${dayX}</div>`;
+                             if(finalTask!=='-') { levasContentHTML += `<div class="leva-task">${finalTask}</div>`; }
+                             if(finalMedium!=='-') { levasContentHTML += `<div class="leva-medium">${finalMedium}</div>`; }
+                             // *** COLETA REINTEGRADA (MOBILE) ***
+                             if (dailyCollections && dailyCollections.length > 0) {
+                                 // console.log(`[Mobile Render] Leva ${lv.id} Dia ${dayX}: Renderizando ${dailyCollections.length} coletas.`);
+                                 dailyCollections.forEach(cl=>{
+                                     if(cl) { levasContentHTML += `<div class="collection-info-inline" title="Coleta p/${cl.levaIds?.join(',') || '?'}: ${cl.qty || 'N/A'}"><span class="collection-icon">C</span> ${cl.exp || 'Coleta'}: ${cl.qty || 'N/A'}</div>`; }
+                                     else { console.warn(`[Mobile Render] Objeto coleta inválido para ${lv.id} Dia ${dayX}`); }
+                                 });
+                             }
+                             levasContentHTML += `</div>`; // Fecha mobile-leva-entry
+                         }
+                     });
                      if(hasContentForDay) { mobileMonthHTML += `<div class="mobile-day-row"><div class="${dayHeaderClasses.join(' ')}">${currentDateMB.toLocaleDateString('pt-BR', {day: 'numeric', month: 'short'})} (${diasSemana[cDoW]})</div><div class="mobile-levas-container">${levasContentHTML}</div></div>`; }
                      currentDateMB.setUTCDate(currentDateMB.getUTCDate() + 1);
                  }
                  mobileMonthHTML += `</div>`;
                  mobileHTML_Accum += mobileMonthHTML;
 
-                  // Atualiza o histórico global no final do processamento do mês
-                 lastMediaChangeDates = { ...monthLastChanges };
+                 lastMediaChangeDates = { ...monthLastChanges }; // Atualiza histórico global
+                 currentMonthDate.setUTCMonth(currentMonthDate.getUTCMonth() + 1);
+            }
 
-                 currentMonthDate.setUTCMonth(currentMonthDate.getUTCMonth() + 1); // Próximo mês
-            } // Fim while meses
-
-            desktopDiv.innerHTML = desktopHTML_Accum;
-            mobileDiv.innerHTML = mobileHTML_Accum;
-
-            // Mostra o layout correto
-            if(isMobileLayout) { mobileDiv.style.display = 'block'; }
-            else { desktopDiv.style.display = 'block'; }
+            desktopDiv.innerHTML = desktopHTML_Accum; mobileDiv.innerHTML = mobileHTML_Accum;
+            if(isMobileLayout) { mobileDiv.style.display = 'block'; } else { desktopDiv.style.display = 'block'; }
          }
 
 
         // --- FUNÇÕES DE EXPORTAÇÃO ---
         function downloadFile(f,c,m){const b=new Blob([c],{type:m});const u=URL.createObjectURL(b);const a=cE('a');a.href=u;a.download=f;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);}
         function escapeCsvField(f) { if(f===null||f===undefined)return'""'; const s=String(f); if(s.includes(',')||s.includes('"')||s.includes('\n'))return`"${s.replace(/"/g,'""')}"`; return s; }
-
-        // *** NOVA FUNÇÃO: showTasksTodayInNewTab ***
+        // *** showTasksTodayInNewTab ATUALIZADA (v9.2 - Reintegra Coletas) ***
         function showTasksTodayInNewTab() {
-            const today = new Date();
-            const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 12, 0, 0)); // Meio-dia UTC
-            const todayStr = today.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            let tasksFound = false;
-            initializeLastChangeDates(); // Reseta para cálculo correto do dia
-            let tempLastChanges = { ...lastMediaChangeDates };
+            const today = new Date(); const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 12, 0, 0)); const todayStr = today.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            let tasksFound = false; initializeLastChangeDates(); let tempLastChanges = { ...lastMediaChangeDates };
+            // console.log("[showTasksToday] Coletas Globais:", JSON.stringify(collections));
 
-            let htmlContent = `
-                <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Tarefas de Hoje - ${todayStr}</title>
-                <style> body { font-family: sans-serif; margin: 20px; line-height: 1.5; font-size: 14px; }
-                        .leva-section { border: 1px solid #ccc; border-radius: 8px; padding: 15px; margin-bottom: 15px; page-break-inside: avoid; }
-                        .leva-section h2 { margin: 0 0 10px 0; font-size: 1.3em; border-bottom: 1px solid #eee; padding-bottom: 8px; color: #333; }
-                        .task-item { margin-bottom: 6px; } .task-label { font-weight: bold; color: #555; }
-                        .collection-item { color: #28a745; margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 8px; font-weight: bold;}
-                        .collection-details { font-weight: normal; color: #333; margin-left: 5px;}
-                        .no-tasks { font-style: italic; color: #666; } hr { border: 0; border-top: 1px dashed #ccc; margin: 15px 0;}
-                        @media print { button { display: none; } body { margin: 0.5in; font-size: 11pt; } .leva-section { border: 1px solid #aaa; box-shadow: none; } }
-                </style></head><body><h1>Tarefas para ${todayStr}</h1> <button onclick="window.print();">Imprimir</button><hr>`;
+            let htmlContent = ` <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Tarefas de Hoje - ${todayStr}</title><style> body { font-family: sans-serif; margin: 20px; line-height: 1.6; font-size: 14px; } .leva-section { border: 1px solid #ccc; border-radius: 8px; padding: 15px; margin-bottom: 15px; page-break-inside: avoid; } .leva-section h2 { margin: 0 0 10px 0; font-size: 1.3em; border-bottom: 1px solid #eee; padding-bottom: 8px; color: #333; } .task-item { margin-bottom: 6px; } .task-label { font-weight: bold; color: #555; } .collection-item { color: #28a745; margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 8px; font-weight: bold;} .collection-details { font-weight: normal; color: #333; margin-left: 5px;} .no-tasks { font-style: italic; color: #666; } hr { border: 0; border-top: 1px dashed #ccc; margin: 15px 0;} @media print { button { display: none; } body { margin: 0.5in; font-size: 11pt; } .leva-section { border: 1px solid #aaa; box-shadow: none; } } </style></head><body><h1>Tarefas para ${todayStr}</h1> <button onclick="window.print();">Imprimir</button><hr>`;
 
             levas.forEach(leva => {
                 const dailyInfo = getDailyLevaInfo(todayUTC, leva, tempLastChanges);
                 if (dailyInfo) {
                     const { dayX, finalTask, finalMedium, dailyCollections } = dailyInfo;
-                    if (finalTask !== '-' || finalMedium !== '-' || dailyCollections.length > 0) {
+                    // console.log(`[showTasksToday] Leva ${leva.id} Dia ${dayX}: Task='${finalTask}', Medium='${finalMedium}', Collections found=`, dailyCollections ? dailyCollections.length : 0);
+                    if (finalTask !== '-' || finalMedium !== '-' || (dailyCollections && dailyCollections.length > 0)) {
                         tasksFound = true;
                         htmlContent += `<div class="leva-section"><h2>Leva ${leva.id} (Dia ${dayX}) <small>(${leva.cellLines || 'N/A'})</small></h2>`;
                         if (finalTask !== '-') htmlContent += `<div class="task-item"><span class="task-label">Tarefa:</span> ${finalTask}</div>`;
                         if (finalMedium !== '-') htmlContent += `<div class="task-item"><span class="task-label">Meio:</span> ${finalMedium}</div>`;
-                        dailyCollections.forEach(col => { htmlContent += `<div class="collection-item"><span class="task-label">Coleta:</span> <span class="collection-details">${col.exp || 'Coleta'}: ${col.qty || 'N/A'}</span></div>`; });
-                        htmlContent += `</div>`;
+                        // *** COLETA REINTEGRADA AQUI (NOVA ABA) ***
+                        if(dailyCollections && dailyCollections.length > 0) {
+                             // console.log(`[showTasksToday] Leva ${leva.id} Dia ${dayX}: Adicionando ${dailyCollections.length} coletas ao HTML.`);
+                            dailyCollections.forEach(col => {
+                                if(col) { htmlContent += `<div class="collection-item"><span class="task-label">Coleta:</span> <span class="collection-details">${col.exp || 'Coleta'}: ${col.qty || 'N/A'}</span></div>`; }
+                                else { console.warn(`[showTasksToday] Objeto coleta inválido para Leva ${leva.id} Dia ${dayX}`); }
+                            });
+                        }
+                        htmlContent += `</div>`; // Fecha leva-section
                     }
                 }
-                 // Atualiza histórico principal após processar
-                 if (lastMediaChangeDates[leva.id] && tempLastChanges[leva.id] && tempLastChanges[leva.id].getTime() !== lastMediaChangeDates[leva.id].getTime()) { lastMediaChangeDates[leva.id] = tempLastChanges[leva.id]; }
-                 else if (!lastMediaChangeDates[leva.id] && tempLastChanges[leva.id]) { lastMediaChangeDates[leva.id] = tempLastChanges[leva.id]; }
+                 if (lastMediaChangeDates[leva.id] && tempLastChanges[leva.id] && tempLastChanges[leva.id].getTime() !== lastMediaChangeDates[leva.id].getTime()) { lastMediaChangeDates[leva.id] = tempLastChanges[leva.id]; } else if (!lastMediaChangeDates[leva.id] && tempLastChanges[leva.id]) { lastMediaChangeDates[leva.id] = tempLastChanges[leva.id]; }
             });
 
             if (!tasksFound) { htmlContent += `<p class="no-tasks">Nenhuma tarefa ou coleta agendada para hoje.</p>`; }
