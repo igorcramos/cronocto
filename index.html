@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Cronograma v8.4 (Ajustes Finais)</title>
+    <title>Gerador de Cronograma v8.5 (Mobile Layout Otimizado)</title>
     <style>
-        /* CSS */
+        /* CSS Base */
         :root { --primary-color: #007bff; --secondary-color: #6c757d; --success-color: #28a745; --warning-color: #ffc107; --danger-color: #dc3545; --light-gray: #f8f9fa; --medium-gray: #e9ecef; --dark-gray: #6c757d; --text-color: #333; --border-color: #dee2e6; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; margin: 0; padding: 15px; background-color: #f4f7f6; color: var(--text-color); }
         .container { display: grid; grid-template-columns: minmax(350px, 1.5fr) 3fr; gap: 25px; max-width: 1700px; margin: auto; }
@@ -43,19 +43,10 @@
         .calendar-month { margin-bottom: 30px; }
         .calendar-month h3 { background-color: var(--medium-gray); padding: 8px; text-align: center; border-radius: 4px 4px 0 0; color: #495057; font-size: 1.1em; font-weight: 600; }
         .calendar-table { width: 100%; border-collapse: collapse; table-layout: fixed; background-color: #fff; }
-        .calendar-table th, .calendar-table td {
-            border: 1px solid var(--border-color); padding: 6px; text-align: left;
-            vertical-align: top;
-            height: 320px; /* <<< DOBRADO DE 160px */
-            font-size: 0.8em; word-wrap: break-word; position: relative;
-        }
+        .calendar-table th, .calendar-table td { border: 1px solid var(--border-color); padding: 6px; text-align: left; vertical-align: top; height: 320px; font-size: 0.8em; word-wrap: break-word; position: relative; }
         .calendar-table th { background-color: var(--light-gray); text-align: center; height: auto; font-weight: bold; }
         .day-number { position: absolute; top: 3px; right: 5px; font-weight: bold; color: var(--dark-gray); font-size: 1.1em; }
-        .calendar-table td > div {
-             margin-top: 20px;
-             max-height: 290px; /* <<< DOBRADO E AJUSTADO (320 - padding - num) */
-             overflow-y: auto; padding-right: 3px;
-        }
+        .calendar-table td > div { margin-top: 20px; max-height: 290px; overflow-y: auto; padding-right: 3px; }
         .leva-entry { margin-bottom: 4px; padding: 4px 6px; border-radius: 3px; border-left: 4px solid; background-color: #fff; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
         .leva-info { font-weight: bold; font-size: 0.95em; margin-bottom: 2px;}
         .leva-task { font-style: italic; margin-bottom: 2px;}
@@ -70,13 +61,85 @@
         .processing-feedback { display: inline-block; margin-left: 10px; color: var(--secondary-color); font-style: italic; }
         #import-section p, #export-section p {font-size: 0.85em; color: var(--dark-gray); margin-top: 0;}
         #export-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
-        @media (max-width: 768px) { .container { grid-template-columns: 1fr; gap: 20px; } body { padding: 10px; font-size: 15px; } .input-section h2, .output-section h2 { font-size: 1.3em; } .input-section h3 { font-size: 1.1em; } button { font-size: 1em; padding: 12px 18px; } .calendar-table th, .calendar-table td { height: 280px;} /* <<< DOBRADO */ .day-number { font-size: 1em;} .calendar-table td > div { max-height: 250px; } } /* <<< DOBRADO e ajustado */
-        @media (max-width: 480px) { button { width: 100%; margin-bottom: 10px; } .data-list li { flex-direction: column; align-items: flex-start; } .data-list li .item-actions { margin-top: 8px; } .calendar-table th, .calendar-table td { font-size: 0.7em; height: 240px;} /* <<< DOBRADO */ .day-number { font-size: 0.9em;} .calendar-table td > div { max-height: 210px; } } /* <<< DOBRADO e ajustado */
+
+        /* --- MEDIA QUERIES PARA MOBILE --- */
+        @media (max-width: 992px) {
+             .container {
+                 grid-template-columns: minmax(300px, 1fr) 2fr;
+                 gap: 20px;
+            }
+        }
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr; /* Coluna ÚNICA */
+                gap: 20px;
+            }
+            body {
+                padding: 10px;
+                font-size: 15px; /* Aumenta fonte base um pouco */
+            }
+            /* Ajusta títulos */
+            .input-section h2, .output-section h2 { font-size: 1.3em; }
+            .input-section h3 { font-size: 1.1em; }
+
+            /* --- Ajustes Calendário Mobile (Mantendo Tabela) --- */
+            .calendar-table {
+                table-layout: auto; /* Permite colunas se ajustarem */
+                word-break: break-word;
+            }
+            .calendar-table th {
+                 font-size: 0.85em;
+                 padding: 4px 2px;
+            }
+            .calendar-table td {
+                 height: auto;
+                 min-height: 200px; /* <<< ALTURA MÍNIMA BEM MAIOR */
+                 font-size: 0.9em; /* <<< Aumenta fonte DENTRO da célula */
+                 padding: 4px;
+                 vertical-align: top;
+            }
+            .day-number {
+                font-size: 1.1em;
+                top: 2px;
+                right: 3px;
+                color: #aaa;
+            }
+             .calendar-table td > div { /* Container interno das entradas */
+                 max-height: none; /* Sem limite de altura interna */
+                 margin-top: 25px; /* Espaço abaixo do número do dia */
+                 overflow-y: visible; /* Sem scroll interno */
+                 padding-right: 0;
+             }
+             .leva-entry {
+                 padding: 5px; /* Mais padding interno */
+                 margin-bottom: 6px; /* Mais espaço entre levas */
+                 border-radius: 4px;
+                 box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+             }
+             .leva-info { font-size: 1em; }
+             .leva-task, .leva-medium, .collection-info-inline { font-size: 0.95em; }
+             .collection-info-inline { margin-top: 4px; padding: 3px 5px;}
+
+             /* Botões maiores */
+             button { padding: 12px 15px; font-size: 1em;}
+        }
+
+        @media (max-width: 480px) {
+            body { font-size: 14px; }
+            button.primary-btn, button.export-btn, button.import-btn, button.danger-btn {
+                 width: 100%; margin-bottom: 8px; margin-right: 0;
+            }
+             .data-list li { flex-direction: column; align-items: flex-start; }
+             .data-list li .item-actions { margin-top: 8px; width: 100%; display: flex; justify-content: flex-end; }
+             .calendar-table th, .calendar-table td { min-height: 180px; font-size: 0.85em; }
+             .leva-info { font-size: 0.95em; }
+             .leva-task, .leva-medium, .collection-info-inline { font-size: 0.9em; }
+        }
     </style>
 </head>
 <body>
     <div id="save-notification">Dados salvos localmente!</div>
-    <h1>Gerador de Cronograma v8.4 (Altura Dobrada + Coleta Reordenada)</h1>
+    <h1>Gerador de Cronograma v8.4 (Mobile Layout Otimizado)</h1>
 
     <div class="container">
         <div class="input-section">
@@ -145,7 +208,6 @@
         const tarefasCriticasKeywords = ["AGREGAR", "Transferir", "Plaquear", "Organoides formados", "Indução"];
         const meioManutencao = "Meio 2 (Manutenção)";
         const preferredChangeDaysOfWeek = [1, 3, 5]; // Seg, Qua, Sex
-        // Chaves localStorage (v8)
         const LEVAS_KEY = 'cronogramaLevas_v8'; const PROTOCOLS_KEY = 'cronogramaProtocols_v8'; const COLLECTIONS_KEY = 'cronogramaCollections_v8';
 
         // --- FUNÇÕES DE PERSISTÊNCIA ---
@@ -184,7 +246,7 @@
         function gId(id){return document.getElementById(id)} function qSA(sel){return document.querySelectorAll(sel)} function cE(tag){return document.createElement(tag)}
         function initializeLastChangeDates() { /* ... (igual v8.2) ... */ lastMediaChangeDates = {}; levas.forEach(lv=>{const lS=new Date(lv.startDate+'T12:00:00Z');lastMediaChangeDates[lv.id]=new Date(lS.setUTCDate(lS.getUTCDate()+3))}); }
 
-        // *** FUNÇÃO HELPER REUTILIZÁVEL (v8.3 - Lógica Troca Otimizada) ***
+        // *** FUNÇÃO HELPER REUTILIZÁVEL (v8.3 - Lógica Troca Otimizada FINAL) ***
         function getDailyLevaInfo(currentDateUTC, leva, currentLastMediaChangeDates) {
             const levaStartDate = new Date(leva.startDate + 'T00:00:00Z');
             const currentDateStartOfDay = new Date(Date.UTC(currentDateUTC.getUTCFullYear(), currentDateUTC.getUTCMonth(), currentDateUTC.getUTCDate()));
@@ -195,51 +257,39 @@
             const step = protocols.find(p => p.protocolName === leva.protocolName && p.day === dayX);
             const baseTask = step ? step.baseTask : '-';
             const specificMedium = step ? step.specificMedium : '-';
-            const currentDayOfWeek = currentDateUTC.getUTCDay(); // 0=Dom, 1=Seg...
+            const currentDayOfWeek = currentDateUTC.getUTCDay();
             let finalTask = "-"; let finalMedium = "-"; let performMediaChange = false;
             const isCriticalTask = baseTask !== '-' && tarefasCriticasKeywords.some(keyword => baseTask.toLowerCase().includes(keyword.toLowerCase()));
-            // Identifica tarefas críticas que *implicitamente* trocam o meio
             const criticalTaskImpliesMediaChange = isCriticalTask && (baseTask.toLowerCase().includes('transferir') || baseTask.toLowerCase().includes('plaquear') || specificMedium !== '-');
 
             // --- Lógica de Troca e Tarefa/Meio por Período ---
-            if (dayX >= 0 && dayX <= 3) { // Dias 0 a 3: Lógica simples
+            if (dayX >= 0 && dayX <= 3) {
                  finalMedium = specificMedium;
-                 if (dayX === 0) { finalTask = baseTask; } // AGREGAR
-                 else { finalTask = !isCriticalTask ? "Trocar Meio" : baseTask; } // Dias 1, 2, 3
-                 // Registra CADA dia como 'última troca' neste período inicial
+                 if (dayX === 0) { finalTask = baseTask; }
+                 else { finalTask = !isCriticalTask ? "Trocar Meio" : baseTask; }
                  if(currentLastMediaChangeDates) currentLastMediaChangeDates[leva.id] = new Date(currentDateUTC);
 
-            } else if (dayX >= 4 && dayX <= 31) { // Dias 4 a 31: Lógica Otimizada
-                const lastChangeDate = currentLastMediaChangeDates ? (currentLastMediaChangeDates[leva.id] || new Date(levaStartDate.getTime() + 3 * 24*60*60*1000)) : new Date(levaStartDate.getTime() + 3 * 24*60*60*1000); // Dia 3 como ref
+            } else if (dayX >= 4 && dayX <= 31) {
+                const lastChangeDate = currentLastMediaChangeDates ? (currentLastMediaChangeDates[leva.id] || new Date(levaStartDate.getTime() + 3 * 24*60*60*1000)) : new Date(levaStartDate.getTime() + 3 * 24*60*60*1000);
                 const daysSince = daysBetween(currentDateStartOfDay, lastChangeDate);
                 const isPreferredDay = preferredChangeDaysOfWeek.includes(currentDayOfWeek);
                 const nextDay = new Date(currentDateUTC); nextDay.setUTCDate(currentDateUTC.getUTCDate() + 1);
-                const mustChange = (daysSince >= 3) || (daysSince === 2 && nextDay.getUTCDay() === 0); // Safety net
-                const isDayToSkip = [5, 12, 19, 26].includes(dayX); // Dias explícitos para pular
+                const mustChange = (daysSince >= 3) || (daysSince === 2 && nextDay.getUTCDay() === 0);
+                const isDayToSkip = [5, 12, 19, 26].includes(dayX);
 
                 let shouldChangeToday = false;
 
                 if (isCriticalTask) {
-                    // Tarefa Crítica: Usa tarefa/meio do protocolo.
-                    finalTask = baseTask;
-                    finalMedium = specificMedium;
-                    // *** ATUALIZA lastChangeDate SE a tarefa crítica implica meio novo ***
+                    finalTask = baseTask; finalMedium = specificMedium;
                     if (criticalTaskImpliesMediaChange && currentLastMediaChangeDates) {
                         currentLastMediaChangeDates[leva.id] = new Date(currentDateUTC);
-                        // console.log(`[v8.2] Leva ${leva.id} Dia ${dayX}: Critical Task (${finalTask}) updated lastChangeDate.`);
+                         // console.log(`[v8.3] Leva ${leva.id} Dia ${dayX}: Critical Task (${finalTask}) updated lastChangeDate.`);
                     }
-                } else { // Não é tarefa crítica
-                    // *** REORDENADO: Verifica Skip PRIMEIRO (após crítico) ***
-                    if (isDayToSkip && !mustChange) { // Pula apenas se não for forçado pelo safety net
-                        shouldChangeToday = false;
-                        // console.log(`[v8.2] Leva ${leva.id} Dia ${dayX}: Skipping change (day after switch).`);
-                    } else if (mustChange) {
-                        shouldChangeToday = true; // Safety net: troca obrigatória
-                        // console.log(`[v8.2] Leva ${leva.id} Dia ${dayX}: Mandatory change (DaysSince=${daysSince}).`);
-                    } else if (isPreferredDay) {
-                        shouldChangeToday = true; // Dia preferencial (Seg/Qua/Sex)
-                         // console.log(`[v8.2] Leva ${leva.id} Dia ${dayX}: Preferred change (Day ${currentDayOfWeek}).`);
-                    } // Se não for nenhum, shouldChangeToday continua false
+                } else {
+                    // Lógica de Decisão de Troca REFINADA
+                    if (mustChange) { shouldChangeToday = true; } // 1. Safety net
+                    else if (!isDayToSkip && isPreferredDay) { shouldChangeToday = true; } // 2. Dia Preferencial (DESDE que não seja dia de pular)
+                    // Se nenhuma das acima, shouldChangeToday permanece false
 
                     performMediaChange = shouldChangeToday;
 
@@ -248,13 +298,10 @@
                         if (dayX >= 25) finalMedium = "Meio 3";
                         else if (dayX >= 18) finalMedium = "Meio 2 + FGF2+EGF";
                         else if (dayX >= 11) finalMedium = "Meio 2 + FGF2";
-                        else finalMedium = "Meio 1"; // Dias 4 a 10
-                        if(currentLastMediaChangeDates) currentLastMediaChangeDates[leva.id] = new Date(currentDateUTC); // REGISTRA
+                        else finalMedium = "Meio 1";
+                        if(currentLastMediaChangeDates) currentLastMediaChangeDates[leva.id] = new Date(currentDateUTC);
                     } else {
-                        // Sem troca agendada hoje, mostra apenas tarefa/meio base (se houver)
-                        finalTask = baseTask;
-                        finalMedium = specificMedium;
-                         // Garante meio correto nos dias de switch sem troca agendada
+                        finalTask = baseTask; finalMedium = specificMedium;
                          if (dayX === 4 && finalMedium === '-') finalMedium = "Meio 1";
                          if (dayX === 11 && finalMedium === '-') finalMedium = "Meio 2 + FGF2";
                          if (dayX === 18 && finalMedium === '-') finalMedium = "Meio 2 + FGF2+EGF";
@@ -262,7 +309,7 @@
                     }
                 }
 
-            } else if (dayX >= 32) { // Dias 32+: Manutenção Seg/Qua/Sex
+            } else if (dayX >= 32) {
                  const isMaintenanceChangeDay = preferredChangeDaysOfWeek.includes(currentDayOfWeek) && !isCriticalTask;
                  if (isMaintenanceChangeDay) { finalTask = "Trocar Meio (Manut.)"; finalMedium = meioManutencao; if(currentLastMediaChangeDates) currentLastMediaChangeDates[leva.id] = new Date(currentDateUTC); }
                  else { finalTask = baseTask; finalMedium = specificMedium; }
@@ -271,11 +318,7 @@
 
             const dailyCollections = collections.filter(c => c.day === dayX && c.levaIds.includes(leva.id));
 
-            // Retorna null apenas se TUDO estiver vazio/padrão
-            if (finalTask === '-' && finalMedium === '-' && dailyCollections.length === 0) {
-                 return null;
-            }
-
+            if (finalTask === '-' && finalMedium === '-' && dailyCollections.length === 0) { return null; }
             return { dayX, finalTask, finalMedium, dailyCollections };
          }
 
@@ -311,9 +354,12 @@
                                 let tempLastChanges = { ...lastMediaChangeDates };
                                 const dailyInfo = getDailyLevaInfo(cD4Diff, lv, tempLastChanges);
                                 // Atualiza o histórico principal APENAS se houve mudança para esta leva
-                                if (tempLastChanges[lv.id] !== lastMediaChangeDates[lv.id]) {
+                                if (lastMediaChangeDates[lv.id] && tempLastChanges[lv.id] && tempLastChanges[lv.id].getTime() !== lastMediaChangeDates[lv.id].getTime()) {
+                                    lastMediaChangeDates[lv.id] = tempLastChanges[lv.id];
+                                } else if (!lastMediaChangeDates[lv.id] && tempLastChanges[lv.id]) {
                                     lastMediaChangeDates[lv.id] = tempLastChanges[lv.id];
                                 }
+
 
                                 if (dailyInfo) { // Se houver algo para mostrar para esta leva neste dia
                                     const { dayX, finalTask, finalMedium, dailyCollections } = dailyInfo;
@@ -322,9 +368,9 @@
                                     levaHTML += `<div class="leva-info">${lv.id} DIA ${dayX}</div>`;
                                     if(finalTask!=='-') { levaHTML += `<div class="leva-task">${finalTask}</div>`; }
                                     if(finalMedium!=='-') { levaHTML += `<div class="leva-medium">${finalMedium}</div>`; }
-                                    // *** Adiciona Coletas DENTRO do box da leva (FORMATO ATUALIZADO) ***
+                                    // *** Adiciona Coletas DENTRO do box da leva (FORMATO ATUALIZADO v8.3) ***
                                     dailyCollections.forEach(cl=>{
-                                        levaHTML += `<div class="collection-info-inline" title="Coleta p/${cl.levaIds.join(',')}: ${cl.exp || 'N/A'} - ${cl.qty || 'N/A'}">`; // Tooltip Atualizado
+                                        levaHTML += `<div class="collection-info-inline" title="Coleta p/${cl.levaIds.join(',')}: ${cl.qty || 'N/A'}">`; // Tooltip Atualizado
                                         levaHTML += `<span class="collection-icon">C</span> ${cl.exp || 'Coleta'}: ${cl.qty || 'N/A'}</div>`; // Formato Exp: Qtd
                                     });
                                     levaHTML += `</div>`; // Fecha leva-entry
@@ -348,12 +394,12 @@
 
 
         // --- FUNÇÕES DE EXPORTAÇÃO ---
-        // (Sem mudanças)
+        // (Formato das coletas atualizado no TXT e CSV)
         function downloadFile(f,c,m){const b=new Blob([c],{type:m});const u=URL.createObjectURL(b);const a=cE('a');a.href=u;a.download=f;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);}
         function escapeCsvField(f) { if(f===null||f===undefined)return'""'; const s=String(f); if(s.includes(',')||s.includes('"')||s.includes('\n'))return`"${s.replace(/"/g,'""')}"`; return s; }
-        function exportTasksToday() { /* ... */ const t=new Date(); const tU=new Date(Date.UTC(t.getFullYear(),t.getMonth(),t.getDate(),12,0,0)); const tS=t.toLocaleDateString('pt-BR'); let o=`Tarefas para ${tS}:\n\n`; let f=false; initializeLastChangeDates(); levas.forEach(lv=>{ const dI=getDailyLevaInfo(tU,lv,lastMediaChangeDates); if(dI){const{dayX,finalTask,finalMedium,dailyCollections}=dI;if(finalTask!=='-'||finalMedium!=='-'||dailyCollections.length>0){f=true;o+=`--- Leva ${lv.id} (Dia ${dayX}) ---\n`;if(finalTask!=='-')o+=`Tarefa: ${finalTask}\n`;if(finalMedium!=='-')o+=`Meio: ${finalMedium}\n`;dailyCollections.forEach(cl=>{o+=`Coleta: ${cl.exp || 'Coleta'}: ${cl.qty || 'N/A'}\n`});o+='\n'}} }); if(!f)o+="Nenhuma tarefa ou coleta."; downloadFile(`tarefas_hoje_${t.toISOString().split('T')[0]}.txt`,o,'text/plain;charset=utf-8;'); } // Formato coleta TXT atualizado
-        function exportDataJson() { /* ... */ const dE={levas,protocols,collections}; const jS=JSON.stringify(dE,null,2); downloadFile('cronograma_organoides_dados.json',jS,'application/json;charset=utf-8;'); }
-        function exportScheduleCsv() { /* ... */ const sDS=gId('calendar-start-date').value, eDS=gId('calendar-end-date').value; if(!sDS||!eDS){alert("Defina datas p/ CSV.");return} const sD=new Date(sDS+'T12:00:00Z'), eD=new Date(eDS+'T12:00:00Z'); if(eD<sD){alert("Data final antes da inicial.");return} gId('csv-processing').style.display='inline'; setTimeout(()=>{const h=['Data','Dia_Semana','ID_Leva','Dia_X','Tipo','Descricao','Detalhes'];let cC='\uFEFF';cC+=h.map(escapeCsvField).join(',')+'\n'; initializeLastChangeDates(); let eLC={...lastMediaChangeDates}; let cD=new Date(sD); while(cD<=eD){const dS=cD.toLocaleDateString('pt-BR',{timeZone:'UTC'});const dOWS=diasSemana[cD.getUTCDay()]; levas.forEach(lv=>{const dI=getDailyLevaInfo(cD,lv,eLC);if(dI){const{dayX,finalTask,finalMedium,dailyCollections}=dI; if(finalTask!=='-'||finalMedium!=='-'){cC+=[dS,dOWS,lv.id,dayX,'Atividade',finalTask,finalMedium].map(escapeCsvField).join(',')+'\n'} dailyCollections.forEach(cl=>{cC+=[dS,dOWS,lv.id,dayX,'Coleta',cl.exp,cl.qty].map(escapeCsvField).join(',')+'\n'}) }}); cD.setUTCDate(cD.getUTCDate()+1);} downloadFile(`cronograma_organoides_${sDS}_a_${eDS}.csv`,cC,'text/csv;charset=utf-8;'); gId('csv-processing').style.display='none'; },50); } // Colunas CSV coleta atualizadas
+        function exportTasksToday() { const t=new Date(); const tU=new Date(Date.UTC(t.getFullYear(),t.getMonth(),t.getDate(),12,0,0)); const tS=t.toLocaleDateString('pt-BR'); let o=`Tarefas para ${tS}:\n\n`; let f=false; initializeLastChangeDates(); levas.forEach(lv=>{ const dI=getDailyLevaInfo(tU,lv,lastMediaChangeDates); if(dI){const{dayX,finalTask,finalMedium,dailyCollections}=dI;if(finalTask!=='-'||finalMedium!=='-'||dailyCollections.length>0){f=true;o+=`--- Leva ${lv.id} (Dia ${dayX}) ---\n`;if(finalTask!=='-')o+=`Tarefa: ${finalTask}\n`;if(finalMedium!=='-')o+=`Meio: ${finalMedium}\n`;dailyCollections.forEach(cl=>{o+=`Coleta: ${cl.exp || 'Coleta'}: ${cl.qty || 'N/A'}\n`});o+='\n'}} }); if(!f)o+="Nenhuma tarefa ou coleta."; downloadFile(`tarefas_hoje_${t.toISOString().split('T')[0]}.txt`,o,'text/plain;charset=utf-8;'); }
+        function exportDataJson() { const dE={levas,protocols,collections}; const jS=JSON.stringify(dE,null,2); downloadFile('cronograma_organoides_dados.json',jS,'application/json;charset=utf-8;'); }
+        function exportScheduleCsv() { const sDS=gId('calendar-start-date').value, eDS=gId('calendar-end-date').value; if(!sDS||!eDS){alert("Defina datas p/ CSV.");return} const sD=new Date(sDS+'T12:00:00Z'), eD=new Date(eDS+'T12:00:00Z'); if(eD<sD){alert("Data final antes da inicial.");return} gId('csv-processing').style.display='inline'; setTimeout(()=>{const h=['Data','Dia_Semana','ID_Leva','Dia_X','Tipo','Descricao','Detalhes'];let cC='\uFEFF';cC+=h.map(escapeCsvField).join(',')+'\n'; initializeLastChangeDates(); let eLC={...lastMediaChangeDates}; let cD=new Date(sD); while(cD<=eD){const dS=cD.toLocaleDateString('pt-BR',{timeZone:'UTC'});const dOWS=diasSemana[cD.getUTCDay()]; levas.forEach(lv=>{const dI=getDailyLevaInfo(cD,lv,eLC);if(dI){const{dayX,finalTask,finalMedium,dailyCollections}=dI; if(finalTask!=='-'||finalMedium!=='-'){cC+=[dS,dOWS,lv.id,dayX,'Atividade',finalTask,finalMedium].map(escapeCsvField).join(',')+'\n'} dailyCollections.forEach(cl=>{cC+=[dS,dOWS,lv.id,dayX,'Coleta',cl.exp || 'Coleta',cl.qty || 'N/A'].map(escapeCsvField).join(',')+'\n'}) }}); cD.setUTCDate(cD.getUTCDate()+1);} downloadFile(`cronograma_organoides_${sDS}_a_${eDS}.csv`,cC,'text/csv;charset=utf-8;'); gId('csv-processing').style.display='none'; },50); }
 
         // --- INICIALIZAÇÃO ---
         // *** getDefaultProtocols ATUALIZADO para Dia 0 ***
