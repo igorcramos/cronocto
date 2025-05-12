@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Cronograma v9.5.1 (Fix Simulação Tarefas Hoje)</title> {/* Versão atualizada */}
+    <title>Gerador de Cronograma v9.5.2 (Fix Tarefas Hoje + Espaçamento)</title> {/* Versão atualizada */}
     <style>
-        /* CSS (Idêntico à v9.5, sem mudanças aqui) */
         :root { --primary-color: #007bff; --secondary-color: #6c757d; --success-color: #28a745; --warning-color: #ffc107; --danger-color: #dc3545; --light-gray: #f8f9fa; --medium-gray: #e9ecef; --dark-gray: #6c757d; --text-color: #333; --border-color: #dee2e6; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; margin: 0; padding: 15px; background-color: #f4f7f6; color: var(--text-color); }
         .container { display: grid; grid-template-columns: minmax(350px, 1.5fr) 3fr; gap: 25px; max-width: 1700px; margin: auto; }
@@ -28,7 +27,7 @@
         button.clear-btn { background-color: var(--secondary-color); }
         button.export-btn { background-color: #17a2b8; }
         button.import-btn { background-color: #fd7e14; }
-        button.view-btn { background-color: #6f42c1; } /* Roxo para visualizar */
+        button.view-btn { background-color: #6f42c1; }
         .data-list { list-style: none; padding: 0; max-height: 150px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 4px; margin-top: 10px; padding: 10px; background-color: #fdfdfd; }
         .data-list li { font-size: 0.9em; margin-bottom: 8px; padding: 8px; background-color: var(--light-gray); border: 1px solid #eee; border-radius: 3px; display: flex; justify-content: space-between; align-items: center; }
         .data-list li .item-content { flex-grow: 1; margin-right: 10px; line-height: 1.4; }
@@ -47,14 +46,13 @@
         #import-section p, #export-section p {font-size: 0.85em; color: var(--dark-gray); margin-top: 0;}
         #export-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
 
-        /* --- ESTILOS CALENDÁRIO DESKTOP (Tabela) --- */
-        .desktop-calendar .calendar-month { margin-bottom: 30px; }
+        .desktop-calendar .calendar-month { margin-bottom: 15px; } /* Espaçamento reduzido */
         .desktop-calendar .calendar-month h3 { background-color: var(--medium-gray); padding: 8px; text-align: center; border-radius: 4px 4px 0 0; color: #495057; font-size: 1.1em; font-weight: 600; }
         .desktop-calendar .calendar-table { width: 100%; border-collapse: collapse; table-layout: fixed; background-color: #fff; }
         .desktop-calendar .calendar-table th, .desktop-calendar .calendar-table td { border: 1px solid var(--border-color); padding: 6px; text-align: left; vertical-align: top; height: 160px; font-size: 0.8em; word-wrap: break-word; position: relative; }
         .desktop-calendar .calendar-table th { background-color: var(--light-gray); text-align: center; height: auto; font-weight: bold; }
         .desktop-calendar .day-number { position: absolute; top: 3px; right: 5px; font-weight: bold; color: var(--dark-gray); font-size: 1.1em; }
-        .desktop-calendar .calendar-table td > div { margin-top: 20px; max-height: 130px; overflow-y: auto; padding-right: 3px; } /* Conteúdo scrollable */
+        .desktop-calendar .calendar-table td > div { margin-top: 20px; max-height: 130px; overflow-y: auto; padding-right: 3px; }
         .desktop-calendar .leva-entry { margin-bottom: 4px; padding: 4px 6px; border-radius: 3px; border-left: 4px solid; background-color: #fff; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
         .desktop-calendar .leva-info { font-weight: bold; font-size: 0.95em; margin-bottom: 2px;}
         .desktop-calendar .leva-task { font-style: italic; margin-bottom: 2px;}
@@ -65,8 +63,7 @@
         .desktop-calendar .other-month { background-color: var(--medium-gray); color: #adb5bd; }
         .desktop-calendar .today { border: 3px solid var(--primary-color) !important; }
 
-        /* --- ESTILOS MOBILE (Lista de Divs) --- */
-        .mobile-calendar .calendar-month { margin-bottom: 20px; }
+        .mobile-calendar .calendar-month { margin-bottom: 10px; } /* Espaçamento reduzido */
         .mobile-calendar .calendar-month h3 { background-color: var(--medium-gray); padding: 8px; text-align: center; border-radius: 4px; color: #495057; font-size: 1.2em; font-weight: 600; margin-bottom: 15px; }
         .mobile-calendar .mobile-day-row { background-color: #fff; border: 1px solid var(--border-color); margin-bottom: 12px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
         .mobile-calendar .mobile-day-header { background-color: var(--light-gray); padding: 8px 12px; font-weight: bold; border-bottom: 1px solid var(--border-color); border-radius: 6px 6px 0 0; font-size: 1.05em; color: #495057; }
@@ -77,41 +74,28 @@
         .mobile-calendar .mobile-leva-entry .leva-info { font-size: 1em; font-weight: bold; margin-bottom: 3px; }
         .mobile-calendar .mobile-leva-entry .leva-task { font-style: italic; margin-bottom: 3px; }
         .mobile-calendar .mobile-leva-entry .leva-medium { font-size: 0.95em; color: #555; margin-bottom: 3px; }
-        .mobile-calendar .mobile-leva-entry .collection-info-inline { margin-top: 5px; font-size: 0.95em; } /* Igual desktop */
-        .mobile-calendar .mobile-leva-entry .collection-icon { font-size: 1em; } /* Igual desktop */
+        .mobile-calendar .mobile-leva-entry .collection-info-inline { margin-top: 5px; font-size: 0.95em; }
+        .mobile-calendar .mobile-leva-entry .collection-icon { font-size: 1em; }
 
-        /* --- MEDIA QUERIES --- */
         .mobile-calendar { display: none; }
         .desktop-calendar { display: block; }
-
         @media (max-width: 768px) {
-            .container { grid-template-columns: 1fr; gap: 20px; }
-            body { padding: 10px; font-size: 15px; }
-            .input-section h2, .output-section h2 { font-size: 1.3em; }
-            .input-section h3 { font-size: 1.1em; }
-            .desktop-calendar { display: none; }
-            .mobile-calendar { display: block; }
-            button { padding: 12px 15px; font-size: 1em;}
+            .container { grid-template-columns: 1fr; gap: 20px; } body { padding: 10px; font-size: 15px; } .input-section h2, .output-section h2 { font-size: 1.3em; } .input-section h3 { font-size: 1.1em; } .desktop-calendar { display: none; } .mobile-calendar { display: block; } button { padding: 12px 15px; font-size: 1em;}
         }
         @media (max-width: 480px) {
-            body { font-size: 14px; }
-            button.primary-btn, button.export-btn, button.import-btn, button.danger-btn, button.view-btn { width: 100%; margin-bottom: 8px; margin-right: 0; }
-            .data-list li { flex-direction: column; align-items: flex-start; }
-            .data-list li .item-actions { margin-top: 8px; width: 100%; display: flex; justify-content: flex-end; }
-            .mobile-calendar .mobile-leva-entry { flex-basis: calc(100% - 16px); }
+            body { font-size: 14px; } button.primary-btn, button.export-btn, button.import-btn, button.danger-btn, button.view-btn { width: 100%; margin-bottom: 8px; margin-right: 0; } .data-list li { flex-direction: column; align-items: flex-start; } .data-list li .item-actions { margin-top: 8px; width: 100%; display: flex; justify-content: flex-end; } .mobile-calendar .mobile-leva-entry { flex-basis: calc(100% - 16px); }
         }
     </style>
 </head>
 <body>
     <div id="save-notification">Dados salvos localmente!</div>
-    <h1>Gerador de Cronograma v9.5.1 (Fix Simulação Tarefas Hoje)</h1> {/* Versão atualizada */}
+    <h1>Gerador de Cronograma v9.5.2 (Fix Tarefas Hoje + Espaçamento)</h1>
 
     <div class="container">
         <div class="input-section">
             <h2>1. Dados de Entrada</h2>
              <p style="font-size: 0.85em; color: var(--dark-gray);">As informações são salvas automaticamente no seu navegador.</p>
 
-            <!-- IMPORTAR DADOS -->
             <div id="import-section">
                  <h3>Importar Dados</h3>
                 <p>Importe de arquivos CSV (UTF-8, vírgula) ou JSON. Substitui dados atuais.</p>
@@ -122,24 +106,19 @@
             </div>
             <hr style="margin: 30px 0;">
 
-            <!-- LEVAS (Manual) -->
             <form id="leva-form"> <input type="hidden" id="leva-edit-index"> <h3>Gerenciar Leva (Manual)</h3> <label for="leva-id">ID Leva:</label><input type="text" id="leva-id" required>
-                <label for="leva-start-date">Data Início Agregação (Dia 0):</label>
-                <input type="date" id="leva-start-date" required>
+                <label for="leva-start-date">Data Início Agregação (Dia 0):</label> <input type="date" id="leva-start-date" required>
                 <label for="leva-color">Cor:</label><input type="color" id="leva-color" value="#add8e6"><input type="text" id="leva-color-text" placeholder="Ou digite nome/hex"> <label for="leva-protocol">Nome do Protocolo:</label><input type="text" id="leva-protocol" value="Trujillo_200" required> <label for="leva-cell-lines">Linhas Celulares:</label><input type="text" id="leva-cell-lines" placeholder="Ex: 7007-1, 8799-1"> <button type="button" id="add-edit-leva-btn" class="primary-btn" onclick="addOrUpdateLeva()">Adicionar Leva</button> <button type="button" onclick="clearLevaForm()" class="clear-btn">Cancelar Edição</button> </form>
             <h4>Levas Atuais:</h4> <ul id="levas-list" class="data-list"></ul>
 
-            <!-- PROTOCOLOS (Manual) -->
             <hr style="margin: 30px 0;">
             <form id="protocol-form"> <h3>Gerenciar Protocolo (Manual)</h3> <label for="protocol-name">Nome do Protocolo:</label><input type="text" id="protocol-name" value="Trujillo_200" required> <label for="protocol-day">Dia (relativo, 0=Agregação):</label><input type="number" id="protocol-day" required> <label for="protocol-task">Tarefa Base:</label><input type="text" id="protocol-task" placeholder="Ex: AGREGAR, -"> <label for="protocol-medium">Meio Específico (ou '-'):</label><input type="text" id="protocol-medium" placeholder="Ex: Pré-indução, -"> <button type="button" class="primary-btn" onclick="addProtocolStep()">Adicionar/Atualizar Passo</button> <p style="font-size: 0.8em; color: var(--dark-gray);">Adicionar passo p/ dia existente atualiza.</p> </form>
             <h4>Protocolos Definidos:</h4> <ul id="protocols-list" class="data-list"></ul>
 
-             <!-- COLETAS (Manual) -->
              <hr style="margin: 30px 0;">
              <form id="collection-form"> <h3>Adicionar Coleta (Manual)</h3> <label>Para Leva(s):</label> <div class="leva-checkbox-container"> <label id="select-all-levas-label"><input type="checkbox" id="select-all-levas" onchange="toggleAllLevaCheckboxes(this.checked)"> Selecionar Todas / Nenhuma</label> <div id="collection-leva-checkboxes"><p style="color: #888; font-style: italic;">Nenhuma leva.</p></div> </div> <label for="collection-day">No Dia do Protocolo (0=Agregação):</label><input type="number" id="collection-day" required placeholder="Ex: 32, 61"> <label for="collection-qty">Quantidade/Detalhes:</label><input type="text" id="collection-qty" placeholder="Ex: 5 organoides"> <label for="collection-exp">Experimento(s):</label><textarea id="collection-exp" placeholder="Ex: RNA-seq, IF"></textarea> <button type="button" class="primary-btn" onclick="addCollection()">Adicionar Coleta</button> </form>
              <h4>Coletas Planejadas:</h4> <ul id="collections-list" class="data-list"></ul>
 
-             <!-- CALENDÁRIO & EXPORT -->
              <hr style="margin: 30px 0;">
             <h3>Gerar Calendário & Exportar</h3>
              <label for="calendar-start-date">Data Início Calendário:</label><input type="date" id="calendar-start-date" required>
@@ -156,7 +135,6 @@
              <button type="button" onclick="clearAllDataStored()" class="danger-btn" style="background-color: var(--danger-color);">Limpar TODOS os Dados Salvos</button>
         </div>
 
-        <!-- ÁREA DE SAÍDA -->
         <div class="output-section">
             <h2>2. Cronograma Visual</h2>
             <div id="calendar-output">
@@ -180,8 +158,8 @@
 
         // --- FUNÇÕES DE PERSISTÊNCIA ---
         function showSaveNotification() { const n=gId('save-notification');if(!n)return; n.classList.add('show'); setTimeout(()=>{n.classList.remove('show')},1500); }
-        function saveData() { try { localStorage.setItem(LEVAS_KEY, JSON.stringify(levas)); localStorage.setItem(PROTOCOLS_KEY, JSON.stringify(protocols)); localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(collections)); showSaveNotification(); console.log("Data saved (v9.5.1 compatible)."); } catch (e) { console.error("Error saving data:", e); alert(`Erro ao salvar dados: ${e.message}.\nVerifique o console (F12).`); }}
-        function loadData() { try { const sL = localStorage.getItem(LEVAS_KEY); const sP = localStorage.getItem(PROTOCOLS_KEY); const sC = localStorage.getItem(COLLECTIONS_KEY); levas = sL ? JSON.parse(sL) : []; protocols = sP ? JSON.parse(sP) : getDefaultProtocols(); collections = sC ? JSON.parse(sC) : []; sortDataArrays(); console.log("Data loaded (v9.5.1 compatible)."); } catch (e) { console.error("Error loading data:", e); alert("Erro ao carregar dados."); levas = []; protocols = getDefaultProtocols(); collections = []; } renderAllLists(); updateCollectionLevaCheckboxes(); }
+        function saveData() { try { localStorage.setItem(LEVAS_KEY, JSON.stringify(levas)); localStorage.setItem(PROTOCOLS_KEY, JSON.stringify(protocols)); localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(collections)); showSaveNotification(); console.log("Data saved (v9.5.2 compatible)."); } catch (e) { console.error("Error saving data:", e); alert(`Erro ao salvar dados: ${e.message}.\nVerifique o console (F12).`); }}
+        function loadData() { try { const sL = localStorage.getItem(LEVAS_KEY); const sP = localStorage.getItem(PROTOCOLS_KEY); const sC = localStorage.getItem(COLLECTIONS_KEY); levas = sL ? JSON.parse(sL) : []; protocols = sP ? JSON.parse(sP) : getDefaultProtocols(); collections = sC ? JSON.parse(sC) : []; sortDataArrays(); console.log("Data loaded (v9.5.2 compatible)."); } catch (e) { console.error("Error loading data:", e); alert("Erro ao carregar dados."); levas = []; protocols = getDefaultProtocols(); collections = []; } renderAllLists(); updateCollectionLevaCheckboxes(); }
         function clearAllDataStored() { if (confirm("ATENÇÃO! Remover PERMANENTEMENTE todos os dados salvos?")) { localStorage.removeItem(LEVAS_KEY); localStorage.removeItem(PROTOCOLS_KEY); localStorage.removeItem(COLLECTIONS_KEY); levas = []; protocols = getDefaultProtocols(); collections = []; renderAllLists(); updateCollectionLevaCheckboxes(); gId('calendar-output').innerHTML = '<div class="desktop-calendar" style="display: none;"></div><div class="mobile-calendar" style="display: none;"></div><p id="calendar-placeholder">Dados limpos.</p>'; alert("Dados removidos."); }}
         function sortDataArrays() { levas.sort((a, b) => a.id.localeCompare(b.id)); protocols.sort((a, b) => { if (a.protocolName !== b.protocolName) return a.protocolName.localeCompare(b.protocolName); return a.day - b.day; }); collections.sort((a,b) => { const lA = (a.levaIds && a.levaIds.length > 0 ? a.levaIds[0] : ''); const lB = (b.levaIds && b.levaIds.length > 0 ? b.levaIds[0] : ''); const lC = lA.localeCompare(lB); return lC !== 0 ? lC : a.day - b.day; }); }
         function renderAllLists() { renderLevaList(); renderProtocolList(); renderCollectionList(); }
@@ -203,55 +181,40 @@
 
         // --- FUNÇÕES DE IMPORTAÇÃO ---
         function handleFileSelect(event, processorFn) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { processorFn(e.target.result); } catch (error) { console.error(`Erro ${file.name}:`, error); alert(`Erro ao processar ${file.name}: ${error.message}`); } finally { event.target.value = null; } }; reader.onerror = () => { alert('Erro ao ler arquivo.'); event.target.value = null; }; reader.readAsText(file, 'UTF-8'); }
-        function parseCSV(csvString) { console.log("[parseCSV v2] Iniciando parse..."); let content = csvString.trim(); if (content.charCodeAt(0) === 0xFEFF) { console.log("[parseCSV v2] BOM detectado e removido."); content = content.substring(1); } const lines = content.split(/\r?\n/); if (lines.length < 2) { throw new Error("CSV inválido ou vazio (cabeçalho + dados)."); } const headerLine = lines[0]; console.log("[parseCSV v2] Linha Cabeçalho:", JSON.stringify(headerLine)); const headers = headerLine.split(',').map(h => h.trim().toLowerCase()); console.log("[parseCSV v2] Cabeçalhos Processados:", headers); const data = []; const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/; for (let i = 1; i < lines.length; i++) { const line = lines[i].trim(); if (line === '') continue; const values = line.split(regex).map(val => { let cleanedVal = val.trim(); if (cleanedVal.startsWith('"') && cleanedVal.endsWith('"')) { cleanedVal = cleanedVal.substring(1, cleanedVal.length - 1).replace(/""/g, '"'); } return cleanedVal; }); if (values.length !== headers.length) { console.warn(`[parseCSV v2] Linha ${i+1} ignorada: colunas (${values.length}) != cabeçalho (${headers.length}). Linha: "${line}" \n Valores:`, values); continue; } const rowObject = {}; for (let j = 0; j < headers.length; j++) { rowObject[headers[j]] = values[j]; } data.push(rowObject); } console.log("[parseCSV v2] Parse concluído. Objetos:", data); return data; }
-        function processLevaData(csvContent) { const pD=parseCSV(csvContent); if (!pD || pD.length === 0) throw new Error("CSV de Levas vazio ou inválido após parse."); const eH=["id_leva","data_inicio_agregacao","cor","linhas_celulares","nome_protocolo"]; const aH=Object.keys(pD[0]); console.log("[processLevaData] Cabeçalhos reais:", aH); console.log("[processLevaData] Cabeçalhos esperados:", eH); for (const e of eH) { if (!aH.includes(e)) { console.error(`[processLevaData] Falha ao encontrar: "${e}"`); throw new Error(`Cabeçalho esperado "${e}" não encontrado (Levas). Encontrados: [${aH.join(', ')}]`); } } const iL=[]; pD.forEach((r, idx)=>{ const id = r["id_leva"]?.trim(); const startDateStr = r["data_inicio_agregacao"]?.trim(); const color = r["cor"]?.trim() || '#cccccc'; const cellLines = r["linhas_celulares"]?.trim() || ''; const protocolName = r["nome_protocolo"]?.trim(); if (!id || !startDateStr || !protocolName) { console.warn(`Leva L${idx + 2} ignorada.`); return; } if (!/^\d{4}-\d{2}-\d{2}$/.test(startDateStr)) { console.warn(`Leva "${id}" L${idx + 2} ignorada: Data inválida.`); return; } iL.push({ id, startDate: startDateStr, color, protocolName, cellLines }); }); if (iL.length === 0) { alert("Nenhuma leva válida no CSV."); return; } if (confirm(`Importar ${iL.length} levas do CSV? (Substitui atuais)`)) { levas = iL; sortDataArrays(); saveData(); renderAllLists(); updateCollectionLevaCheckboxes(); alert("Levas importadas!") } }
-        function processProtocolData(csvContent) { const pD=parseCSV(csvContent); const eH=["nome_protocolo","dia","tarefa_base","meio_especifico"]; const hM={}; const aH=Object.keys(pD[0]||{}); for(const e of eH){const f=aH.find(h=>h===e);if(!f)throw new Error(`Cabeçalho "${e}" não encontrado (Protocolo).`);hM[e]=f} const iP=[]; pD.forEach((r,idx)=>{const pN=r[hM["nome_protocolo"]]?.trim(),dS=r[hM["dia"]]?.trim(),bT=r[hM["tarefa_base"]]?.trim()||'-',sM=r[hM["meio_especifico"]]?.trim()||'-'; if(!pN||dS===undefined||dS===null||dS===''){console.warn(`Protocolo L${idx+2} ignorado.`);return} const d=parseInt(dS); if(isNaN(d)){console.warn(`Protocolo "${pN}" L${idx+2} ignorado: Dia inválido.`);return} iP.push({protocolName:pN,day:d,baseTask:bT,specificMedium:sM})}); if(iP.length===0){alert("Nenhum protocolo válido.");return} if(confirm(`Importar ${iP.length} passos CSV? (Substitui TODOS)`)){protocols=iP;sortDataArrays();saveData();renderProtocolList();alert("Protocolos importados!")} }
-        function processCollectionData(csvContent) { const pD=parseCSV(csvContent); const eH=["levaids","dia","quantidade","experimento"]; const hM={}; const aH=Object.keys(pD[0]||{}); for(const e of eH){const f=aH.find(h=>h===e);if(!f)throw new Error(`Cabeçalho "${e}" não encontrado (Coletas).`);hM[e]=f} const iC=[]; pD.forEach((r,idx)=>{const lIdS=r[hM["levaids"]]?.trim(), dS=r[hM["dia"]]?.trim(), qty=r[hM["quantidade"]]?.trim()||'', exp=r[hM["experimento"]]?.trim()||''; if(!lIdS||dS===undefined||dS===null||dS===''){console.warn(`Coleta L${idx+2} ignorada.`);return} const d=parseInt(dS); if(isNaN(d)){console.warn(`Coleta L${idx+2} ignorada: Dia inválido.`);return} const lIds=lIdS.split(/[,;]/).map(id=>id.trim()).filter(id=>id!==''); if(lIds.length===0){console.warn(`Coleta L${idx+2} ignorada: Nenhum LevaId.`);return} iC.push({levaIds:lIds,day:d,qty:qty,exp:exp})}); if(iC.length===0){alert("Nenhuma coleta válida.");return} if(confirm(`Importar ${iC.length} coletas CSV? (Substitui atuais)`)){collections=iC;sortDataArrays();saveData();renderCollectionList();alert("Coletas importadas!")} }
-        function handleJsonFileSelect(event) { const file = event.target.files[0]; if (!file) return; if (file.type !== 'application/json' && !file.name.toLowerCase().endsWith('.json')) { alert('Selecione .json'); event.target.value = null; return; } const reader = new FileReader(); reader.onload = (e) => { try { const iD = JSON.parse(e.target.result); if (!iD || typeof iD !== 'object' || !Array.isArray(iD.levas) || !Array.isArray(iD.protocols) || !Array.isArray(iD.collections)) { throw new Error("Estrutura JSON inválida."); } const nL = iD.levas.length; const nP = iD.protocols.length; const nC = iD.collections.length; if (confirm(`Importar JSON?\n\n- L:${nL} P:${nP} C:${nC}\n\n(Substitui TUDO)`)) { levas = iD.levas; protocols = iD.protocols; collections = iD.collections; sortDataArrays(); saveData(); renderAllLists(); updateCollectionLevaCheckboxes(); alert("Dados JSON importados!"); } } catch (error) { console.error("Erro JSON:", error); alert(`Erro JSON: ${error.message}`); } finally { event.target.value = null; } }; reader.onerror = () => { alert('Erro ao ler arquivo.'); event.target.value = null; }; reader.readAsText(file, 'UTF-8'); }
+        function parseCSV(csvString) { let content = csvString.trim(); if (content.charCodeAt(0) === 0xFEFF) { content = content.substring(1); } const lines = content.split(/\r?\n/); if (lines.length < 2) { throw new Error("CSV inválido ou vazio (cabeçalho + dados)."); } const headers = lines[0].split(',').map(h => h.trim().toLowerCase()); const data = []; const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/; for (let i = 1; i < lines.length; i++) { const line = lines[i].trim(); if (line === '') continue; const values = line.split(regex).map(val => { let cleanedVal = val.trim(); if (cleanedVal.startsWith('"') && cleanedVal.endsWith('"')) { cleanedVal = cleanedVal.substring(1, cleanedVal.length - 1).replace(/""/g, '"'); } return cleanedVal; }); if (values.length !== headers.length) { console.warn(`Linha ${i+1} ignorada: colunas (${values.length}) != cabeçalho (${headers.length}).`); continue; } const rowObject = {}; for (let j = 0; j < headers.length; j++) { rowObject[headers[j]] = values[j]; } data.push(rowObject); } return data; }
+        function processLevaData(csvContent) { const pD=parseCSV(csvContent); if (!pD || pD.length === 0) throw new Error("CSV de Levas vazio ou inválido."); const eH=["id_leva","data_inicio_agregacao","cor","linhas_celulares","nome_protocolo"]; const aH=Object.keys(pD[0]); for (const e of eH) { if (!aH.includes(e)) { throw new Error(`Cabeçalho esperado "${e}" não encontrado (Levas).`); } } const iL=[]; pD.forEach((r)=>{ const id = r["id_leva"]?.trim(); const startDateStr = r["data_inicio_agregacao"]?.trim(); const color = r["cor"]?.trim() || '#cccccc'; const cellLines = r["linhas_celulares"]?.trim() || ''; const protocolName = r["nome_protocolo"]?.trim(); if (!id || !startDateStr || !protocolName) return; if (!/^\d{4}-\d{2}-\d{2}$/.test(startDateStr)) return; iL.push({ id, startDate: startDateStr, color, protocolName, cellLines }); }); if (iL.length === 0) { alert("Nenhuma leva válida no CSV."); return; } if (confirm(`Importar ${iL.length} levas do CSV? (Substitui atuais)`)) { levas = iL; sortDataArrays(); saveData(); renderAllLists(); updateCollectionLevaCheckboxes(); alert("Levas importadas!") } }
+        function processProtocolData(csvContent) { const pD=parseCSV(csvContent); const eH=["nome_protocolo","dia","tarefa_base","meio_especifico"]; const aH=Object.keys(pD[0]||{}); for(const e of eH){if(!aH.includes(e))throw new Error(`Cabeçalho "${e}" não encontrado (Protocolo).`)} const iP=[]; pD.forEach((r)=>{const pN=r["nome_protocolo"]?.trim(),dS=r["dia"]?.trim(),bT=r["tarefa_base"]?.trim()||'-',sM=r["meio_especifico"]?.trim()||'-'; if(!pN||dS==null||dS==='')return; const d=parseInt(dS); if(isNaN(d))return; iP.push({protocolName:pN,day:d,baseTask:bT,specificMedium:sM})}); if(iP.length===0){alert("Nenhum protocolo válido.");return} if(confirm(`Importar ${iP.length} passos CSV? (Substitui TODOS)`)){protocols=iP;sortDataArrays();saveData();renderProtocolList();alert("Protocolos importados!")} }
+        function processCollectionData(csvContent) { const pD=parseCSV(csvContent); const eH=["levaids","dia","quantidade","experimento"]; const aH=Object.keys(pD[0]||{}); for(const e of eH){if(!aH.includes(e))throw new Error(`Cabeçalho "${e}" não encontrado (Coletas).`)} const iC=[]; pD.forEach((r)=>{const lIdS=r["levaids"]?.trim(), dS=r["dia"]?.trim(), qty=r["quantidade"]?.trim()||'', exp=r["experimento"]?.trim()||''; if(!lIdS||dS==null||dS==='')return; const d=parseInt(dS); if(isNaN(d))return; const lIds=lIdS.split(/[,;]/).map(id=>id.trim()).filter(id=>id!==''); if(lIds.length===0)return; iC.push({levaIds:lIds,day:d,qty:qty,exp:exp})}); if(iC.length===0){alert("Nenhuma coleta válida.");return} if(confirm(`Importar ${iC.length} coletas CSV? (Substitui atuais)`)){collections=iC;sortDataArrays();saveData();renderCollectionList();alert("Coletas importadas!")} }
+        function handleJsonFileSelect(event) { const file = event.target.files[0]; if (!file) return; if (file.type !== 'application/json' && !file.name.toLowerCase().endsWith('.json')) { alert('Selecione .json'); event.target.value = null; return; } const reader = new FileReader(); reader.onload = (e) => { try { const iD = JSON.parse(e.target.result); if (!iD || typeof iD !== 'object' || !Array.isArray(iD.levas) || !Array.isArray(iD.protocols) || !Array.isArray(iD.collections)) { throw new Error("Estrutura JSON inválida."); } if (confirm(`Importar JSON? (Substitui TUDO)`)) { levas = iD.levas; protocols = iD.protocols; collections = iD.collections; sortDataArrays(); saveData(); renderAllLists(); updateCollectionLevaCheckboxes(); alert("Dados JSON importados!"); } } catch (error) { alert(`Erro JSON: ${error.message}`); } finally { event.target.value = null; } }; reader.onerror = () => { alert('Erro ao ler arquivo.'); event.target.value = null; }; reader.readAsText(file, 'UTF-8'); }
 
         // --- LÓGICA CENTRAL E FUNÇÕES AUXILIARES ---
-        function daysBetween(d1, d2) { const msPerDay = 1000 * 60 * 60 * 24; const startOfDay1 = Date.UTC(d1.getUTCFullYear(), d1.getUTCMonth(), d1.getUTCDate()); const startOfDay2 = Date.UTC(d2.getUTCFullYear(), d2.getUTCMonth(), d2.getUTCDate()); const diffMs = startOfDay1 - startOfDay2; const diffDays = Math.floor(diffMs / msPerDay + 0.00001); return diffDays; }
+        function daysBetween(d1, d2) { const msPerDay = 1000*60*60*24; const s1=Date.UTC(d1.getUTCFullYear(),d1.getUTCMonth(),d1.getUTCDate()); const s2=Date.UTC(d2.getUTCFullYear(),d2.getUTCMonth(),d2.getUTCDate()); return Math.floor((s1-s2)/msPerDay + 0.00001); }
         function gId(id){return document.getElementById(id)} function qSA(sel){return document.querySelectorAll(sel)} function cE(tag){return document.createElement(tag)}
-        function initializeLastChangeDates() {
-            lastMediaChangeDates = {};
-            levas.forEach(lv => {
-                const levaStartDate = new Date(lv.startDate + 'T00:00:00Z');
-                const initialChangeDate = new Date(levaStartDate);
-                initialChangeDate.setUTCDate(levaStartDate.getUTCDate() + 3);
-                lastMediaChangeDates[lv.id] = initialChangeDate;
-            });
-        }
+        function initializeLastChangeDates() { lastMediaChangeDates = {}; levas.forEach(lv => { const lS = new Date(lv.startDate + 'T00:00:00Z'); const iCD = new Date(lS); iCD.setUTCDate(lS.getUTCDate() + 3); lastMediaChangeDates[lv.id] = iCD; }); }
 
-        // *** FUNÇÃO HELPER REUTILIZÁVEL (v9.5.1) ***
+        // *** FUNÇÃO HELPER REUTILIZÁVEL (v9.5.2) ***
         function getDailyLevaInfo(currentDateUTC, leva, currentLastMediaChangeDates) {
             const levaStartDate = new Date(leva.startDate + 'T00:00:00Z');
             const currentDateStartOfDay = new Date(Date.UTC(currentDateUTC.getUTCFullYear(), currentDateUTC.getUTCMonth(), currentDateUTC.getUTCDate()));
-
             if (currentDateStartOfDay.getTime() < levaStartDate.getTime()) { return null; }
 
             const dayX = daysBetween(currentDateStartOfDay, levaStartDate);
             const step = protocols.find(p => p.protocolName === leva.protocolName && p.day === dayX);
-            const baseTask = step ? step.baseTask : '-';
-            const specificMedium = step ? step.specificMedium : '-';
+            const baseTask = step ? step.baseTask : '-'; const specificMedium = step ? step.specificMedium : '-';
             const currentDayOfWeek = currentDateUTC.getUTCDay();
-
             let finalTask = "-"; let finalMedium = "-"; let performMediaChange = false;
-            const isCriticalTask = baseTask !== '-' && tarefasCriticasKeywords.some(keyword => baseTask.toLowerCase().includes(keyword.toLowerCase()));
+            const isCriticalTask = baseTask !== '-' && tarefasCriticasKeywords.some(k => baseTask.toLowerCase().includes(k.toLowerCase()));
             const criticalTaskImpliesMediaChange = isCriticalTask && (baseTask.toLowerCase().includes('transferir') || baseTask.toLowerCase().includes('plaquear') || specificMedium !== '-');
 
-            // Período Inicial (Dias 0 a 3)
             if (dayX >= 0 && dayX <= 3) {
                 finalMedium = specificMedium;
                 if (dayX === 0) { finalTask = baseTask; }
                 else { finalTask = isCriticalTask ? baseTask : "Trocar Meio"; performMediaChange = true; }
-            }
-            // Período Intermediário (Dias 4 a 31)
-            else if (dayX >= 4 && dayX <= 31) {
-                const lastChangeDate = currentLastMediaChangeDates && currentLastMediaChangeDates[leva.id] ? currentLastMediaChangeDates[leva.id] : (() => { const dateD3 = new Date(levaStartDate); dateD3.setUTCDate(levaStartDate.getUTCDate() + 3); return dateD3; })();
+            } else if (dayX >= 4 && dayX <= 31) {
+                const lastChangeDate = currentLastMediaChangeDates && currentLastMediaChangeDates[leva.id] ? currentLastMediaChangeDates[leva.id] : (() => { const d3 = new Date(levaStartDate); d3.setUTCDate(levaStartDate.getUTCDate() + 3); return d3; })();
                 const daysSince = daysBetween(currentDateStartOfDay, lastChangeDate);
                 const nextDay = new Date(currentDateUTC); nextDay.setUTCDate(currentDateUTC.getUTCDate() + 1);
-                const nextDayIsSunday = nextDay.getUTCDay() === 0;
-                const mustChange = (daysSince >= 3) || (daysSince >= 2 && nextDayIsSunday);
+                const mustChange = (daysSince >= 3) || (daysSince >= 2 && nextDay.getUTCDay() === 0);
                 const isDayToSkip = [5, 12, 19, 26].includes(dayX);
                 const isPreferredDay = preferredChangeDaysOfWeek.includes(currentDayOfWeek);
                 let shouldChangeToday = false;
@@ -262,7 +225,7 @@
                     else if (mustChange) { shouldChangeToday = true; }
                 }
                 else if (mustChange) { shouldChangeToday = true; }
-                else if (isDayToSkip) { /* Não faz nada */ }
+                else if (isDayToSkip) {}
                 else if (isPreferredDay && daysSince >= 1) { shouldChangeToday = true; }
 
                 if (shouldChangeToday) {
@@ -271,253 +234,182 @@
                     else if (dayX >= 18) finalMedium = "Meio 2 + FGF2+EGF";
                     else if (dayX >= 11) finalMedium = "Meio 2 + FGF2";
                     else finalMedium = "Meio 1";
-                }
-                else if (!performMediaChange && !isCriticalTask) {
+                } else if (!performMediaChange && !isCriticalTask) {
                     finalTask = baseTask; finalMedium = specificMedium;
                     if (dayX === 4 && finalMedium === '-') finalMedium = "Meio 1";
                     if (dayX === 11 && finalMedium === '-') finalMedium = "Meio 2 + FGF2";
                     if (dayX === 18 && finalMedium === '-') finalMedium = "Meio 2 + FGF2+EGF";
                     if (dayX === 25 && finalMedium === '-') finalMedium = "Meio 3";
                 }
-            }
-            // Período de Manutenção (Dias 32 em diante)
-            else if (dayX >= 32) {
+            } else if (dayX >= 32) {
                 const isMaintenanceChangeDay = preferredChangeDaysOfWeek.includes(currentDayOfWeek);
                 if (isCriticalTask) {
                     finalTask = baseTask; finalMedium = specificMedium;
-                     if (criticalTaskImpliesMediaChange) { performMediaChange = true; }
-                 }
-                 else if (isMaintenanceChangeDay) {
-                     performMediaChange = true; finalTask = "Trocar Meio (Manut.)"; finalMedium = meioManutencao;
-                 }
-                 else { finalTask = baseTask; finalMedium = specificMedium; }
-                 if (dayX === 32 && baseTask !== '-' && !isCriticalTask && !isMaintenanceChangeDay) {
-                     finalTask = baseTask; finalMedium = specificMedium;
-                 }
+                    if (criticalTaskImpliesMediaChange) { performMediaChange = true; }
+                } else if (isMaintenanceChangeDay) {
+                    performMediaChange = true; finalTask = "Trocar Meio (Manut.)"; finalMedium = meioManutencao;
+                } else { finalTask = baseTask; finalMedium = specificMedium; }
+                if (dayX === 32 && baseTask !== '-' && !isCriticalTask && !isMaintenanceChangeDay) { finalTask = baseTask; finalMedium = specificMedium; }
             }
 
             if (performMediaChange && currentLastMediaChangeDates && currentDateUTC) {
-                // Certifique-se de que currentLastMediaChangeDates[leva.id] existe antes de atribuir
-                if (typeof currentLastMediaChangeDates[leva.id] === 'undefined' || currentLastMediaChangeDates[leva.id].getTime() !== new Date(currentDateUTC).getTime()) {
-                    currentLastMediaChangeDates[leva.id] = new Date(currentDateUTC);
+                // Apenas atualiza se a data for diferente para evitar criar novos objetos Date desnecessariamente
+                const newDate = new Date(currentDateUTC);
+                if (!currentLastMediaChangeDates[leva.id] || currentLastMediaChangeDates[leva.id].getTime() !== newDate.getTime()) {
+                    currentLastMediaChangeDates[leva.id] = newDate;
                 }
             }
-
             const dailyCollections = collections.filter(c => c.day === dayX && Array.isArray(c.levaIds) && c.levaIds.includes(leva.id));
-
             if (finalTask === '-' && finalMedium === '-' && dailyCollections.length === 0) { return null; }
             return { dayX, finalTask, finalMedium, dailyCollections };
         }
 
-        // *** GERAÇÃO DO CALENDÁRIO VISUAL (v9.5.1) ***
+        // *** GERAÇÃO DO CALENDÁRIO VISUAL (v9.5.2) ***
         function generateCalendar() {
             const sDStr=gId('calendar-start-date').value, eDStr=gId('calendar-end-date').value;
-            const outputDiv = gId('calendar-output'); const desktopDiv = outputDiv.querySelector('.desktop-calendar'); const mobileDiv = outputDiv.querySelector('.mobile-calendar'); const placeholder = gId('calendar-placeholder');
-
-            if(!sDStr||!eDStr){alert("Defina datas de início e fim para o calendário.");return}
-            if(levas.length===0){alert("Nenhuma leva cadastrada para gerar o cronograma.");return}
-            if(protocols.length===0){alert("Nenhum protocolo definido.");return}
+            if(!sDStr||!eDStr||levas.length===0||protocols.length===0){alert("Defina datas e certifique-se de que há levas e protocolos.");return}
             const sD=new Date(sDStr+'T12:00:00Z'), eD=new Date(eDStr+'T12:00:00Z');
-            if(isNaN(sD.getTime()) || isNaN(eD.getTime())) { alert("Datas inválidas."); return; }
-            if(eD<sD){alert("Data final do calendário não pode ser anterior à data inicial.");return}
+            if(isNaN(sD.getTime())||isNaN(eD.getTime())||eD<sD){alert("Datas inválidas ou data final anterior à inicial.");return}
             const today=new Date(); today.setUTCHours(0,0,0,0);
-
+            const outputDiv = gId('calendar-output'), desktopDiv = outputDiv.querySelector('.desktop-calendar'), mobileDiv = outputDiv.querySelector('.mobile-calendar'), placeholder = gId('calendar-placeholder');
             if(placeholder) placeholder.style.display = 'none';
-            desktopDiv.innerHTML = ''; mobileDiv.innerHTML = '';
-            desktopDiv.style.display = 'none'; mobileDiv.style.display = 'none';
+            desktopDiv.innerHTML = ''; mobileDiv.innerHTML = ''; desktopDiv.style.display = 'none'; mobileDiv.style.display = 'none';
             initializeLastChangeDates();
             const isMobileLayout = window.innerWidth <= MOBILE_BREAKPOINT;
-            let desktopHTML_Accum = ''; let mobileHTML_Accum = '';
+            let desktopHTML_Accum = '', mobileHTML_Accum = '';
             let currentMonthDate = new Date(Date.UTC(sD.getUTCFullYear(), sD.getUTCMonth(), 1));
             let processLastChanges = { ...lastMediaChangeDates };
 
             while (currentMonthDate <= eD) {
-                 const month = currentMonthDate.getUTCMonth(); const year = currentMonthDate.getUTCFullYear();
+                 const month = currentMonthDate.getUTCMonth(), year = currentMonthDate.getUTCFullYear();
                  const monthName = currentMonthDate.toLocaleString('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'});
                  let desktopMonthHTML = `<div class="calendar-month"><h3>${monthName}</h3><table class="calendar-table"><thead><tr>${diasSemana.map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>`;
-                 let firstDayOfMonthDT = new Date(Date.UTC(year, month, 1)); let startingDayDT = firstDayOfMonthDT.getUTCDay();
+                 let firstDayOfMonthDT = new Date(Date.UTC(year, month, 1)), startingDayDT = firstDayOfMonthDT.getUTCDay();
                  let currentDateDT = new Date(firstDayOfMonthDT); currentDateDT.setUTCDate(currentDateDT.getUTCDate() - startingDayDT);
                  let desktopDone = false;
                  while (!desktopDone) {
                      desktopMonthHTML += '<tr>';
                      for (let i = 0; i < 7; i++) {
-                         const dOM = currentDateDT.getUTCDate(); const cMCk = currentDateDT.getUTCMonth(); const cY = currentDateDT.getUTCFullYear(); const cDoW = currentDateDT.getUTCDay();
-                         const isCurrentMonth = cMCk === month && cY === year; const isWeekend = cDoW === 0 || cDoW === 6;
-                         const currentDayUTC0 = new Date(currentDateDT); currentDayUTC0.setUTCHours(0, 0, 0, 0); const isToday = currentDayUTC0.getTime() === today.getTime();
-                         let cellClasses = []; if (!isCurrentMonth) cellClasses.push('other-month'); if (isWeekend && isCurrentMonth) cellClasses.push('weekend'); if (isToday) cellClasses.push('today');
-                         desktopMonthHTML += `<td class="${cellClasses.join(' ')}">`;
-                         if (isCurrentMonth) {
+                         const dOM=currentDateDT.getUTCDate(),cMCk=currentDateDT.getUTCMonth(),cY=currentDateDT.getUTCFullYear(),cDoW=currentDateDT.getUTCDay();
+                         const isCM=cMCk===month&&cY===year,isWk=cDoW===0||cDoW===6; const cDUT0=new Date(currentDateDT);cDUT0.setUTCHours(0,0,0,0); const isTd=cDUT0.getTime()===today.getTime();
+                         let cCls=[];if(!isCM)cCls.push('other-month');if(isWk&&isCM)cCls.push('weekend');if(isTd)cCls.push('today');
+                         desktopMonthHTML += `<td class="${cCls.join(' ')}">`;
+                         if (isCM) {
                              desktopMonthHTML += `<span class="day-number">${dOM}</span>`;
                              if (currentDateDT >= sD && currentDateDT <= eD) {
-                                 desktopMonthHTML += `<div>`;
-                                 const cD4Diff = new Date(currentDateDT);
+                                 desktopMonthHTML += `<div>`; const cD4Diff = new Date(currentDateDT);
                                  levas.forEach(lv => {
-                                     const dailyInfo = getDailyLevaInfo(cD4Diff, lv, processLastChanges);
-                                     if (dailyInfo) {
-                                         const { dayX, finalTask, finalMedium, dailyCollections } = dailyInfo;
-                                         let levaHTML = `<div class="leva-entry" style="border-left-color:${lv.color};" title="Linhas:${lv.cellLines||'N/A'}"><div class="leva-info">${lv.id} DIA ${dayX}</div>${finalTask!=='-'?`<div class="leva-task">${finalTask}</div>`:''}${finalMedium!=='-'?`<div class="leva-medium">${finalMedium}</div>`:''}`;
-                                         if (dailyCollections && dailyCollections.length > 0) { dailyCollections.forEach(cl=>{ if (cl) { levaHTML += `<div class="collection-info-inline" title="Coleta p/${cl.levaIds?.join(',') || '?'}: ${cl.qty || 'N/A'}"><span class="collection-icon">C</span> ${cl.exp || 'Coleta'}: ${cl.qty || 'N/A'}</div>`; } else { console.warn(`[Desktop Render] Objeto coleta inválido para ${lv.id} Dia ${dayX}`);} }); }
-                                         levaHTML += `</div>`; desktopMonthHTML += levaHTML;
-                                     }
-                                 });
+                                     const dI = getDailyLevaInfo(cD4Diff, lv, processLastChanges);
+                                     if (dI) { const { dayX, finalTask, finalMedium, dailyCollections } = dI; let lH = `<div class="leva-entry" style="border-left-color:${lv.color};" title="Linhas:${lv.cellLines||'N/A'}"><div class="leva-info">${lv.id} DIA ${dayX}</div>${finalTask!=='-'?`<div class="leva-task">${finalTask}</div>`:''}${finalMedium!=='-'?`<div class="leva-medium">${finalMedium}</div>`:''}`; if (dailyCollections&&dailyCollections.length>0) {dailyCollections.forEach(cl=>{if(cl)lH+=`<div class="collection-info-inline" title="Coleta p/${cl.levaIds?.join(',')||'?'}: ${cl.qty||'N/A'}"><span class="collection-icon">C</span> ${cl.exp||'Coleta'}: ${cl.qty||'N/A'}</div>`});} lH+=`</div>`; desktopMonthHTML+=lH; } });
                                  desktopMonthHTML += '</div>';
                              }
                          }
-                         desktopMonthHTML += '</td>';
-                         currentDateDT.setUTCDate(currentDateDT.getUTCDate() + 1);
-                         if (currentDateDT.getUTCMonth() !== month && currentDateDT > eD) { if (i < 6) { desktopMonthHTML += '<td class="other-month"></td>'.repeat(6 - i); } desktopDone = true; break; }
+                         desktopMonthHTML += '</td>'; currentDateDT.setUTCDate(currentDateDT.getUTCDate() + 1);
+                         if (currentDateDT.getUTCMonth()!==month && currentDateDT>eD){if(i<6)desktopMonthHTML+='<td class="other-month"></td>'.repeat(6-i);desktopDone=true;break;}
                      }
-                     desktopMonthHTML += '</tr>'; if (desktopDone) break;
+                     desktopMonthHTML+='</tr>';if(desktopDone)break;
                  }
-                 desktopMonthHTML += '</tbody></table></div>'; desktopHTML_Accum += desktopMonthHTML;
-
+                 desktopMonthHTML+='</tbody></table></div>'; desktopHTML_Accum+=desktopMonthHTML;
                  let mobileMonthHTML = `<div class="calendar-month"><h3>${monthName}</h3>`;
-                 let currentDateMB = new Date(Date.UTC(year, month, 1)); let monthEndDateMB = new Date(Date.UTC(year, month + 1, 0));
+                 let currentDateMB = new Date(Date.UTC(year, month, 1)), monthEndDateMB = new Date(Date.UTC(year, month + 1, 0));
                  while(currentDateMB <= monthEndDateMB) {
-                     if (currentDateMB >= sD && currentDateMB <= eD) {
-                         const dOM = currentDateMB.getUTCDate(); const cDoW = currentDateMB.getUTCDay(); const isWeekendMB = cDoW === 0 || cDoW === 6;
-                         const currentDayUTC0MB = new Date(currentDateMB); currentDayUTC0MB.setUTCHours(0,0,0,0); const isTodayMB = currentDayUTC0MB.getTime() === today.getTime();
-                         let dayHeaderClasses = ['mobile-day-header']; if(isWeekendMB) dayHeaderClasses.push('weekend'); if(isTodayMB) dayHeaderClasses.push('today');
-                         let levasContentHTML = ''; let hasContentForDay = false; const cD4DiffMB = new Date(currentDateMB);
+                     if (currentDateMB>=sD && currentDateMB<=eD) {
+                         const cDoW=currentDateMB.getUTCDay(),isWkMB=cDoW===0||cDoW===6;const cDUT0MB=new Date(currentDateMB);cDUT0MB.setUTCHours(0,0,0,0);const isTdMB=cDUT0MB.getTime()===today.getTime();
+                         let dHCls=['mobile-day-header'];if(isWkMB)dHCls.push('weekend');if(isTdMB)dHCls.push('today');
+                         let lvsCHTM = ''; let hasCnt=false; const cD4DiffMB=new Date(currentDateMB);
                          levas.forEach(lv => {
-                             const dailyInfo = getDailyLevaInfo(cD4DiffMB, lv, processLastChanges);
-                             if (dailyInfo) {
-                                 hasContentForDay = true; const { dayX, finalTask, finalMedium, dailyCollections } = dailyInfo;
-                                 levasContentHTML += `<div class="mobile-leva-entry" style="border-left-color:${lv.color};" title="Linhas:${lv.cellLines||'N/A'}">`;
-                                 levasContentHTML += `<div class="leva-info">${lv.id} DIA ${dayX}</div>`;
-                                 if(finalTask!=='-') { levasContentHTML += `<div class="leva-task">${finalTask}</div>`; } if(finalMedium!=='-') { levasContentHTML += `<div class="leva-medium">${finalMedium}</div>`; }
-                                 if (dailyCollections && dailyCollections.length > 0) { dailyCollections.forEach(cl=>{ if(cl) { levasContentHTML += `<div class="collection-info-inline" title="Coleta p/${cl.levaIds?.join(',') || '?'}: ${cl.qty || 'N/A'}"><span class="collection-icon">C</span> ${cl.exp || 'Coleta'}: ${cl.qty || 'N/A'}</div>`; } else { console.warn(`[Mobile Render] Objeto coleta inválido para ${lv.id} Dia ${dayX}`); } }); }
-                                 levasContentHTML += `</div>`;
-                             }
-                         });
-                         if(hasContentForDay) { mobileMonthHTML += `<div class="mobile-day-row"><div class="${dayHeaderClasses.join(' ')}">${currentDateMB.toLocaleDateString('pt-BR', {day: 'numeric', month: 'short', timeZone: 'UTC'})} (${diasSemana[cDoW]})</div><div class="mobile-levas-container">${levasContentHTML}</div></div>`; }
+                             const dI=getDailyLevaInfo(cD4DiffMB,lv,processLastChanges);
+                             if(dI){hasCnt=true;const{dayX,finalTask,finalMedium,dailyCollections}=dI;lvsCHTM+=`<div class="mobile-leva-entry" style="border-left-color:${lv.color};" title="Linhas:${lv.cellLines||'N/A'}"><div class="leva-info">${lv.id} DIA ${dayX}</div>`; if(finalTask!=='-')lvsCHTM+=`<div class="leva-task">${finalTask}</div>`;if(finalMedium!=='-')lvsCHTM+=`<div class="leva-medium">${finalMedium}</div>`;if(dailyCollections&&dailyCollections.length>0){dailyCollections.forEach(cl=>{if(cl)lvsCHTM+=`<div class="collection-info-inline" title="Coleta p/${cl.levaIds?.join(',')||'?'}: ${cl.qty||'N/A'}"><span class="collection-icon">C</span> ${cl.exp||'Coleta'}: ${cl.qty||'N/A'}</div>`});}lvsCHTM+=`</div>`;} });
+                         if(hasCnt)mobileMonthHTML+=`<div class="mobile-day-row"><div class="${dHCls.join(' ')}">${currentDateMB.toLocaleDateString('pt-BR',{day:'numeric',month:'short',timeZone:'UTC'})} (${diasSemana[cDoW]})</div><div class="mobile-levas-container">${lvsCHTM}</div></div>`;
                      }
-                     currentDateMB.setUTCDate(currentDateMB.getUTCDate() + 1);
+                     currentDateMB.setUTCDate(currentDateMB.getUTCDate()+1);
                  }
-                 mobileMonthHTML += `</div>`; mobileHTML_Accum += mobileMonthHTML;
-                 currentMonthDate.setUTCMonth(currentMonthDate.getUTCMonth() + 1);
+                 mobileMonthHTML+='</div>'; mobileHTML_Accum+=mobileMonthHTML;
+                 currentMonthDate.setUTCMonth(currentMonthDate.getUTCMonth()+1);
             }
-
             desktopDiv.innerHTML = desktopHTML_Accum; mobileDiv.innerHTML = mobileHTML_Accum;
             if(isMobileLayout) { mobileDiv.style.display = 'block'; desktopDiv.style.display = 'none'; }
             else { desktopDiv.style.display = 'block'; mobileDiv.style.display = 'none'; }
             lastMediaChangeDates = { ...processLastChanges };
         }
 
-
-        // --- FUNÇÕES DE EXPORTAÇÃO ---
-        function downloadFile(f,c,m){const b=new Blob([c],{type:m+';charset=utf-8'});const u=URL.createObjectURL(b);const a=cE('a');a.href=u;a.download=f;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);}
-        function escapeCsvField(f) { if(f===null||f===undefined)return'""'; const s=String(f); if(s.includes(',')||s.includes('"')||s.includes('\n'))return`"${s.replace(/"/g,'""')}"`; return s; }
-
-        // *** showTasksTodayInNewTab CORRIGIDA (v9.5.1 - Simulação Global Precisa) ***
+        // *** showTasksTodayInNewTab CORRIGIDA (v9.5.2 - Simulação Mais Robusta) ***
         function showTasksTodayInNewTab() {
             const today = new Date();
             const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 12, 0, 0));
             const todayStr = today.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
             let tasksFound = false;
-
-            let tempLastChanges = {};
-            levas.forEach(lv => {
-                const levaStartDate = new Date(lv.startDate + 'T00:00:00Z');
-                const initialChangeDate = new Date(levaStartDate);
-                initialChangeDate.setUTCDate(levaStartDate.getUTCDate() + 3);
-                tempLastChanges[lv.id] = initialChangeDate;
-            });
-
-            let overallStartDate = null;
-            if (levas.length > 0) {
-                overallStartDate = new Date( Math.min(...levas.map(l => new Date(l.startDate + 'T00:00:00Z').getTime())) );
-            }
-
-            if (overallStartDate) {
-                let currentDateSim = new Date(overallStartDate);
-                while (currentDateSim < todayUTC) {
-                    levas.forEach(lv => {
-                        const levaStartDate = new Date(lv.startDate + 'T00:00:00Z');
-                        if (currentDateSim >= levaStartDate) {
-                            getDailyLevaInfo(currentDateSim, lv, tempLastChanges);
-                        }
-                    });
-                    currentDateSim.setUTCDate(currentDateSim.getUTCDate() + 1);
-                }
-            }
-            // console.log("[showTasksToday v9.5.1] Estado simulado lastMediaChangeDates para hoje:", JSON.parse(JSON.stringify(tempLastChanges)));
-
-            let htmlContent = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Tarefas de Hoje - ${todayStr}</title>
-            <style>
-                body { font-family: sans-serif; margin: 20px; line-height: 1.6; font-size: 14px; } .leva-section { border: 1px solid #ccc; border-radius: 8px; padding: 15px; margin-bottom: 15px; page-break-inside: avoid; } .leva-section h2 { margin: 0 0 10px 0; font-size: 1.3em; border-bottom: 1px solid #eee; padding-bottom: 8px; color: #333; display: flex; align-items: center; } .leva-color-swatch { display: inline-block; width: 18px; height: 18px; border: 1px solid #777; margin-right: 10px; vertical-align: middle; flex-shrink: 0; border-radius: 3px; } .leva-title-text { flex-grow: 1; } .task-item { margin-bottom: 6px; } .task-label { font-weight: bold; color: #555; } .collection-item { color: #28a745; margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 8px; font-weight: bold;} .collection-details { font-weight: normal; color: #333; margin-left: 5px;} .no-tasks { font-style: italic; color: #666; } hr { border: 0; border-top: 1px dashed #ccc; margin: 15px 0;}
-                @media print { button { display: none; } body { margin: 0.5in; font-size: 11pt; } .leva-section { border: 1px solid #aaa; box-shadow: none; } h1 {font-size: 16pt;} h2 {font-size: 13pt;} }
-             </style></head><body><h1>Tarefas para ${todayStr}</h1> <button onclick="window.print();">Imprimir</button><hr>`;
+            let simulatedLastMediaChangeDatesForToday = {};
 
             levas.forEach(leva => {
-                const dailyInfo = getDailyLevaInfo(todayUTC, leva, tempLastChanges);
+                const levaStartDate = new Date(leva.startDate + 'T00:00:00Z');
+                if (levaStartDate > todayUTC) { return; }
+                let currentSimDate = new Date(levaStartDate);
+                let levaSpecificLastChange = new Date(levaStartDate); levaSpecificLastChange.setUTCDate(levaStartDate.getUTCDate() + 3);
+                let singleLevaSimState = { [leva.id]: levaSpecificLastChange };
+                while (currentSimDate < todayUTC) {
+                    if (currentSimDate >= levaStartDate) { getDailyLevaInfo(currentSimDate, leva, singleLevaSimState); }
+                    currentSimDate.setUTCDate(currentSimDate.getUTCDate() + 1);
+                }
+                simulatedLastMediaChangeDatesForToday[leva.id] = singleLevaSimState[leva.id];
+            });
+            // console.log("[showTasksToday v9.5.2] Estado simulado:", JSON.parse(JSON.stringify(simulatedLastMediaChangeDatesForToday)));
+
+            let htmlContent = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Tarefas de Hoje - ${todayStr}</title>
+            <style> body { font-family:sans-serif;margin:20px;line-height:1.6;font-size:14px } .leva-section { border:1px solid #ccc;border-radius:8px;padding:15px;margin-bottom:15px;page-break-inside:avoid } .leva-section h2 { margin:0 0 10px 0;font-size:1.3em;border-bottom:1px solid #eee;padding-bottom:8px;color:#333;display:flex;align-items:center } .leva-color-swatch { display:inline-block;width:18px;height:18px;border:1px solid #777;margin-right:10px;vertical-align:middle;flex-shrink:0;border-radius:3px } .leva-title-text { flex-grow:1 } .task-item { margin-bottom:6px } .task-label { font-weight:bold;color:#555 } .collection-item { color:#28a745;margin-top:10px;border-top:1px dashed #ccc;padding-top:8px;font-weight:bold } .collection-details { font-weight:normal;color:#333;margin-left:5px } .no-tasks { font-style:italic;color:#666 } hr { border:0;border-top:1px dashed #ccc;margin:15px 0 }
+                @media print { button{display:none} body{margin:.5in;font-size:11pt} .leva-section{border:1px solid #aaa;box-shadow:none} h1{font-size:16pt} h2{font-size:13pt} }
+            </style></head><body><h1>Tarefas para ${todayStr}</h1><button onclick="window.print()">Imprimir</button><hr>`;
+
+            levas.forEach(leva => {
+                const levaStartDate = new Date(leva.startDate + 'T00:00:00Z');
+                if (levaStartDate > todayUTC) { return; }
+                let stateForThisLevaForToday = { [leva.id]: simulatedLastMediaChangeDatesForToday[leva.id] };
+                const dailyInfo = getDailyLevaInfo(todayUTC, leva, stateForThisLevaForToday);
                 if (dailyInfo) {
-                    tasksFound = true;
-                    const { dayX, finalTask, finalMedium, dailyCollections } = dailyInfo;
-                    htmlContent += `<div class="leva-section"><h2><span class="leva-color-swatch" style="background-color:${leva.color};"></span><span class="leva-title-text">Leva ${leva.id} (Dia ${dayX}) <small>(${leva.cellLines || 'N/A'})</small></span></h2>`;
+                    tasksFound = true; const { dayX, finalTask, finalMedium, dailyCollections } = dailyInfo;
+                    htmlContent += `<div class="leva-section"><h2><span class="leva-color-swatch" style="background-color:${leva.color};"></span><span class="leva-title-text">Leva ${leva.id} (Dia ${dayX}) <small>(${leva.cellLines||'N/A'})</small></span></h2>`;
                     if (finalTask !== '-') htmlContent += `<div class="task-item"><span class="task-label">Tarefa:</span> ${finalTask}</div>`;
                     if (finalMedium !== '-') htmlContent += `<div class="task-item"><span class="task-label">Meio:</span> ${finalMedium}</div>`;
-                    if(dailyCollections && dailyCollections.length > 0) {
-                        dailyCollections.forEach(col => {
-                            if(col) { htmlContent += `<div class="collection-item"><span class="task-label">Coleta:</span> <span class="collection-details">${col.exp || 'Coleta'}: ${col.qty || 'N/A'}</span></div>`; }
-                            else { console.warn(`[showTasksToday] Objeto coleta inválido para Leva ${leva.id} Dia ${dayX}`); }
-                        });
-                    }
+                    if(dailyCollections && dailyCollections.length > 0) { dailyCollections.forEach(col => { if(col) { htmlContent += `<div class="collection-item"><span class="task-label">Coleta:</span><span class="collection-details">${col.exp||'Coleta'}: ${col.qty||'N/A'}</span></div>`; } }); }
                     htmlContent += `</div>`;
                 }
             });
-
             if (!tasksFound) { htmlContent += `<p class="no-tasks">Nenhuma tarefa ou coleta agendada para hoje.</p>`; }
             htmlContent += `</body></html>`;
             const newTab = window.open('', '_blank');
             if (newTab) { newTab.document.open(); newTab.document.write(htmlContent); newTab.document.close(); newTab.focus(); }
-            else { alert('Não foi possível abrir a nova aba. Verifique se o navegador bloqueou pop-ups.'); }
+            else { alert('Não foi possível abrir a nova aba. Verifique pop-ups.'); }
         }
-
 
         function exportDataJson() { const dE={levas,protocols,collections}; const jS=JSON.stringify(dE,null,2); downloadFile('cronograma_organoides_dados.json',jS,'application/json'); }
         function exportScheduleCsv() {
-             const sDStr=gId('calendar-start-date').value, eDStr=gId('calendar-end-date').value;
-             if(!sDStr||!eDStr){alert("Defina datas de início e fim para exportar o CSV.");return}
-             const sD=new Date(sDStr+'T12:00:00Z'), eD=new Date(eDStr+'T12:00:00Z');
-             if(isNaN(sD.getTime()) || isNaN(eD.getTime())) { alert("Datas inválidas."); return; }
-             if(eD<sD){alert("Data final não pode ser anterior à data inicial para o CSV.");return}
+             const sDStr=gId('calendar-start-date').value,eDStr=gId('calendar-end-date').value; if(!sDStr||!eDStr){alert("Defina datas para CSV.");return}
+             const sD=new Date(sDStr+'T12:00:00Z'),eD=new Date(eDStr+'T12:00:00Z'); if(isNaN(sD.getTime())||isNaN(eD.getTime())||eD<sD){alert("Datas CSV inválidas.");return}
              gId('csv-processing').style.display='inline';
              setTimeout(()=>{
-                 const headers=['Data','Dia_Semana','ID_Leva','Dia_X','Tipo','Descricao','Detalhes','Linhas_Celulares']; let csvContent='\uFEFF'; csvContent+=headers.map(escapeCsvField).join(',')+'\n';
-                 let exportLastChanges = {}; levas.forEach(lv => { const levaStartDate = new Date(lv.startDate + 'T00:00:00Z'); const initialChangeDate = new Date(levaStartDate); initialChangeDate.setUTCDate(levaStartDate.getUTCDate() + 3); exportLastChanges[lv.id] = initialChangeDate; });
-                 let currentDate = new Date(sD);
-                 while(currentDate <= eD){
-                     const dateString = currentDate.toLocaleDateString('pt-BR',{timeZone:'UTC'}); const dayOfWeekString = diasSemana[currentDate.getUTCDay()];
-                     levas.forEach(lv => {
-                         const levaStartDate = new Date(lv.startDate + 'T00:00:00Z');
-                         if (currentDate >= levaStartDate) {
-                             const dailyInfo = getDailyLevaInfo(currentDate, lv, exportLastChanges);
-                             if(dailyInfo){ const {dayX, finalTask, finalMedium, dailyCollections} = dailyInfo;
-                                 if(finalTask !== '-' || finalMedium !== '-'){ csvContent+=[dateString, dayOfWeekString, lv.id, dayX, 'Atividade', finalTask, finalMedium, lv.cellLines || ''].map(escapeCsvField).join(',')+'\n'; }
-                                 dailyCollections.forEach(cl => { csvContent+=[dateString, dayOfWeekString, lv.id, dayX, 'Coleta', cl.exp || 'Coleta', cl.qty || 'N/A', lv.cellLines || ''].map(escapeCsvField).join(',')+'\n'; });
-                             } } });
-                     currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+                 const hdrs=['Data','Dia_Semana','ID_Leva','Dia_X','Tipo','Descricao','Detalhes','Linhas_Celulares']; let csvCnt='\uFEFF'+hdrs.map(escapeCsvField).join(',')+'\n';
+                 let expLcs={};levas.forEach(lv=>{const lS=new Date(lv.startDate+'T00:00:00Z');const iCD=new Date(lS);iCD.setUTCDate(lS.getUTCDate()+3);expLcs[lv.id]=iCD;});
+                 let cD=new Date(sD);
+                 while(cD<=eD){ const dS=cD.toLocaleDateString('pt-BR',{timeZone:'UTC'}),dOWS=diasSemana[cD.getUTCDay()];
+                     levas.forEach(lv=>{ const lS=new Date(lv.startDate+'T00:00:00Z');
+                         if(cD>=lS){ const dI=getDailyLevaInfo(cD,lv,expLcs);
+                             if(dI){const{dayX,finalTask,finalMedium,dailyCollections}=dI; if(finalTask!=='-'||finalMedium!=='-'){csvCnt+=[dS,dOWS,lv.id,dayX,'Atividade',finalTask,finalMedium,lv.cellLines||''].map(escapeCsvField).join(',')+'\n'} dailyCollections.forEach(cl=>{csvCnt+=[dS,dOWS,lv.id,dayX,'Coleta',cl.exp||'Coleta',cl.qty||'N/A',lv.cellLines||''].map(escapeCsvField).join(',')+'\n'}) }} });
+                     cD.setUTCDate(cD.getUTCDate()+1);
                  }
-                 downloadFile(`cronograma_organoides_${sDStr}_a_${eDS}.csv`, csvContent, 'text/csv');
-                 gId('csv-processing').style.display='none';
-             }, 50);
+                 downloadFile(`cronograma_${sDStr}_a_${eDStr}.csv`,csvCnt,'text/csv'); gId('csv-processing').style.display='none';
+             },50);
          }
 
         // --- INICIALIZAÇÃO ---
         function getDefaultProtocols() { const dPN="Trujillo_200"; const pS=[ {protocolName:dPN,day:0,baseTask:'AGREGAR',specificMedium:'E8 + 20uM Rocki'}, {protocolName:dPN,day:1,baseTask:'Indução Neural D1 (+100uL)',specificMedium:'E8 + 2uM Dorso + 20uM SB'}, {protocolName:dPN,day:2,baseTask:'Indução Neural D2 (- + 150uL)',specificMedium:'E8 + 1uM Dorso + 10uM SB'}, {protocolName:dPN,day:3,baseTask:'Indução Neural D3 (- + 150uL)',specificMedium:'E8 + 1uM Dorso + 10uM SB'}, {protocolName:dPN,day:4,baseTask:'Transferir ~10 CtO/well // Início Meio 1',specificMedium:'Meio 1'}, {protocolName:dPN,day:5,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:6,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:7,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:8,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:9,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:10,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:11,baseTask:'Plaquear 5 CtO/Well / Início Meio 2+FGF2',specificMedium:'Meio 2 + FGF2'}, {protocolName:dPN,day:12,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:13,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:14,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:15,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:16,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:17,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:18,baseTask:'Adicionar EGF / Início Meio 2+FGF2+EGF',specificMedium:'Meio 2 + FGF2+EGF'}, {protocolName:dPN,day:19,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:20,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:21,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:22,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:23,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:24,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:25,baseTask:'Início Meio 3',specificMedium:'Meio 3'}, {protocolName:dPN,day:26,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:27,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:28,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:29,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:30,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:31,baseTask:'-',specificMedium:'-'}, {protocolName:dPN,day:32,baseTask:'Organoides Formados! / Manutenção',specificMedium:meioManutencao}, ...Array.from({length:61},(_,i)=>({protocolName:dPN,day:33+i,baseTask:'-',specificMedium:'-'})) ]; return pS; }
         window.onload = () => {
              loadData();
-             const todayForDefaults = new Date();
-             const firstDayCurrentMonth = new Date(todayForDefaults.getFullYear(), todayForDefaults.getMonth(), 1);
-             const lastDayNextMonth = new Date(todayForDefaults.getFullYear(), todayForDefaults.getMonth() + 2, 0);
-             const formatDate = (date) => date.toISOString().split('T')[0];
-             if (!gId('calendar-start-date').value) { gId('calendar-start-date').value = formatDate(firstDayCurrentMonth); }
-             if (!gId('calendar-end-date').value) { gId('calendar-end-date').value = formatDate(lastDayNextMonth); }
+             const tD = new Date(); const fDCM = new Date(tD.getFullYear(),tD.getMonth(),1); const lDNM = new Date(tD.getFullYear(),tD.getMonth()+2,0);
+             const fDt = (d) => d.toISOString().split('T')[0];
+             if(!gId('calendar-start-date').value) gId('calendar-start-date').value = fDt(fDCM);
+             if(!gId('calendar-end-date').value) gId('calendar-end-date').value = fDt(lDNM);
              if (levas.length === 0 && localStorage.getItem(LEVAS_KEY) === null) {
-                console.log("Nenhuma leva salva encontrada, adicionando exemplos.");
-                levas = [ { id: 'L2', startDate: '2024-06-20', color: 'pink', protocolName: 'Trujillo_200', cellLines: '14vz, 14T' }, { id: 'L3', startDate: '2024-06-27', color: 'lightgreen', protocolName: 'Trujillo_200', cellLines: '7vz, 7T, 8vz, 8T' }, { id: 'L4', startDate: '2024-07-04', color: 'lightblue', protocolName: 'Trujillo_200', cellLines: '7vz, 7T, 8vz, 8T' }, { id: 'L5', startDate: '2024-07-22', color: 'orange', protocolName: 'Trujillo_200', cellLines: '7vz, 7T, 8vz, 8T, 14vz, 14T' } ];
+                levas = [ { id: 'L2', startDate: '2024-07-20', color: 'pink', protocolName: 'Trujillo_200', cellLines: '14vz, 14T' }, { id: 'L3', startDate: '2024-07-27', color: 'lightgreen', protocolName: 'Trujillo_200', cellLines: '7vz, 7T, 8vz, 8T' }, { id: 'L4', startDate: '2024-08-03', color: 'lightblue', protocolName: 'Trujillo_200', cellLines: '7vz, 7T, 8vz, 8T' }, { id: 'L5', startDate: '2024-08-22', color: 'orange', protocolName: 'Trujillo_200', cellLines: '7vz, 7T, 8vz, 8T, 14vz, 14T' } ];
                  sortDataArrays(); saveData(); renderAllLists(); updateCollectionLevaCheckboxes();
              }
          };
