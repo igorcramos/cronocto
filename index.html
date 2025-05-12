@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Cronograma v9.5 (Fixes Mobile/Tasks + Freq.)</title> {/* Versão atualizada */}
+    <title>Gerador de Cronograma v9.5.1 (Fix Simulação Tarefas Hoje)</title> {/* Versão atualizada */}
     <style>
-        /* CSS (Idêntico à v9.3, sem mudanças aqui) */
+        /* CSS (Idêntico à v9.5, sem mudanças aqui) */
         :root { --primary-color: #007bff; --secondary-color: #6c757d; --success-color: #28a745; --warning-color: #ffc107; --danger-color: #dc3545; --light-gray: #f8f9fa; --medium-gray: #e9ecef; --dark-gray: #6c757d; --text-color: #333; --border-color: #dee2e6; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; margin: 0; padding: 15px; background-color: #f4f7f6; color: var(--text-color); }
         .container { display: grid; grid-template-columns: minmax(350px, 1.5fr) 3fr; gap: 25px; max-width: 1700px; margin: auto; }
@@ -104,7 +104,7 @@
 </head>
 <body>
     <div id="save-notification">Dados salvos localmente!</div>
-    <h1>Gerador de Cronograma v9.5 (Fixes Mobile/Tasks + Freq.)</h1> {/* Versão atualizada */}
+    <h1>Gerador de Cronograma v9.5.1 (Fix Simulação Tarefas Hoje)</h1> {/* Versão atualizada */}
 
     <div class="container">
         <div class="input-section">
@@ -170,24 +170,23 @@
     <script>
         // --- VARIÁVEIS GLOBAIS E CONSTANTES ---
         let levas = []; let protocols = []; let collections = []; let editingLevaIndex = null;
-        let lastMediaChangeDates = {}; // Este será inicializado e atualizado pelas funções
+        let lastMediaChangeDates = {};
         const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
         const tarefasCriticasKeywords = ["AGREGAR", "Transferir", "Plaquear", "Organoides formados", "Indução"];
         const meioManutencao = "Meio 2 (Manutenção)";
-        const preferredChangeDaysOfWeek = [1, 5]; // Seg, Sex (Ajustado conforme solicitado na v9.3)
-        // Chaves localStorage (v9.5 - usando mesmas chaves de v8/v9 por compatibilidade)
+        const preferredChangeDaysOfWeek = [1, 5]; // Seg, Sex
         const LEVAS_KEY = 'cronogramaLevas_v8'; const PROTOCOLS_KEY = 'cronogramaProtocols_v8'; const COLLECTIONS_KEY = 'cronogramaCollections_v8';
         const MOBILE_BREAKPOINT = 768;
 
         // --- FUNÇÕES DE PERSISTÊNCIA ---
         function showSaveNotification() { const n=gId('save-notification');if(!n)return; n.classList.add('show'); setTimeout(()=>{n.classList.remove('show')},1500); }
-        function saveData() { try { localStorage.setItem(LEVAS_KEY, JSON.stringify(levas)); localStorage.setItem(PROTOCOLS_KEY, JSON.stringify(protocols)); localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(collections)); showSaveNotification(); console.log("Data saved (v9.5 compatible)."); } catch (e) { console.error("Error saving data:", e); alert(`Erro ao salvar dados: ${e.message}.\nVerifique o console (F12).`); }}
-        function loadData() { try { const sL = localStorage.getItem(LEVAS_KEY); const sP = localStorage.getItem(PROTOCOLS_KEY); const sC = localStorage.getItem(COLLECTIONS_KEY); levas = sL ? JSON.parse(sL) : []; protocols = sP ? JSON.parse(sP) : getDefaultProtocols(); collections = sC ? JSON.parse(sC) : []; sortDataArrays(); console.log("Data loaded (v9.5 compatible)."); } catch (e) { console.error("Error loading data:", e); alert("Erro ao carregar dados."); levas = []; protocols = getDefaultProtocols(); collections = []; } renderAllLists(); updateCollectionLevaCheckboxes(); }
+        function saveData() { try { localStorage.setItem(LEVAS_KEY, JSON.stringify(levas)); localStorage.setItem(PROTOCOLS_KEY, JSON.stringify(protocols)); localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(collections)); showSaveNotification(); console.log("Data saved (v9.5.1 compatible)."); } catch (e) { console.error("Error saving data:", e); alert(`Erro ao salvar dados: ${e.message}.\nVerifique o console (F12).`); }}
+        function loadData() { try { const sL = localStorage.getItem(LEVAS_KEY); const sP = localStorage.getItem(PROTOCOLS_KEY); const sC = localStorage.getItem(COLLECTIONS_KEY); levas = sL ? JSON.parse(sL) : []; protocols = sP ? JSON.parse(sP) : getDefaultProtocols(); collections = sC ? JSON.parse(sC) : []; sortDataArrays(); console.log("Data loaded (v9.5.1 compatible)."); } catch (e) { console.error("Error loading data:", e); alert("Erro ao carregar dados."); levas = []; protocols = getDefaultProtocols(); collections = []; } renderAllLists(); updateCollectionLevaCheckboxes(); }
         function clearAllDataStored() { if (confirm("ATENÇÃO! Remover PERMANENTEMENTE todos os dados salvos?")) { localStorage.removeItem(LEVAS_KEY); localStorage.removeItem(PROTOCOLS_KEY); localStorage.removeItem(COLLECTIONS_KEY); levas = []; protocols = getDefaultProtocols(); collections = []; renderAllLists(); updateCollectionLevaCheckboxes(); gId('calendar-output').innerHTML = '<div class="desktop-calendar" style="display: none;"></div><div class="mobile-calendar" style="display: none;"></div><p id="calendar-placeholder">Dados limpos.</p>'; alert("Dados removidos."); }}
         function sortDataArrays() { levas.sort((a, b) => a.id.localeCompare(b.id)); protocols.sort((a, b) => { if (a.protocolName !== b.protocolName) return a.protocolName.localeCompare(b.protocolName); return a.day - b.day; }); collections.sort((a,b) => { const lA = (a.levaIds && a.levaIds.length > 0 ? a.levaIds[0] : ''); const lB = (b.levaIds && b.levaIds.length > 0 ? b.levaIds[0] : ''); const lC = lA.localeCompare(lB); return lC !== 0 ? lC : a.day - b.day; }); }
         function renderAllLists() { renderLevaList(); renderProtocolList(); renderCollectionList(); }
 
-        // --- FUNÇÕES CRUD (Manual) --- (Sem alterações, igual v9.3)
+        // --- FUNÇÕES CRUD (Manual) ---
         function addOrUpdateLeva() { const id=gId('leva-id').value.trim(), sD=gId('leva-start-date').value, cP=gId('leva-color').value, cT=gId('leva-color-text').value.trim(), pN=gId('leva-protocol').value.trim(), cL=gId('leva-cell-lines').value.trim(); if(!id||!sD||!pN){alert("ID, Data Início, Nome Prot. obrigatórios.");return} const color=cT||cP; const nLd={id,startDate:sD,color,protocolName:pN,cellLines:cL}; if(editingLevaIndex!==null){levas[editingLevaIndex]=nLd}else{if(levas.some(l=>l.id===id)){alert(`ID "${id}" já existe.`);return}levas.push(nLd)} sortDataArrays(); saveData(); renderLevaList(); updateCollectionLevaCheckboxes(); clearLevaForm(); }
         function editLeva(i) { const l=levas[i]; gId('leva-edit-index').value=i; gId('leva-id').value=l.id; gId('leva-start-date').value=l.startDate; gId('leva-color').value=l.color.startsWith('#')?l.color:'#cccccc'; gId('leva-color-text').value=l.color; gId('leva-protocol').value=l.protocolName; gId('leva-cell-lines').value=l.cellLines; gId('add-edit-leva-btn').textContent='Salvar Edição'; gId('add-edit-leva-btn').classList.add('save-edit-btn'); editingLevaIndex=i; gId('leva-id').focus(); }
         function removeLeva(i) { if(confirm(`Remover leva "${levas[i].id}"?`)){levas.splice(i,1);saveData();renderLevaList();updateCollectionLevaCheckboxes();if(editingLevaIndex===i){clearLevaForm()}} }
@@ -202,7 +201,7 @@
         function updateCollectionLevaCheckboxes() { const c=gId('collection-leva-checkboxes'), sA=gId('select-all-levas'); c.innerHTML=''; if(levas.length===0){c.innerHTML='<p style="color:#888;font-style:italic;">Nenhuma leva.</p>';sA.disabled=true;sA.checked=false;return} sA.disabled=false; levas.forEach(lv=>{const d=cE('div');d.className='leva-checkbox-item';const cb=cE('input');cb.type='checkbox';cb.id=`cb-leva-${lv.id}`;cb.value=lv.id;cb.onchange=()=>{if(!cb.checked){sA.checked=false}else{const allCkd=Array.from(c.querySelectorAll('input')).every(i=>i.checked);sA.checked=allCkd}};const lb=cE('label');lb.htmlFor=cb.id;lb.textContent=lv.id;d.appendChild(cb);d.appendChild(lb);c.appendChild(d)}) }
         function toggleAllLevaCheckboxes(c) { qSA('#collection-leva-checkboxes input').forEach(cb=>cb.checked=c) }
 
-        // --- FUNÇÕES DE IMPORTAÇÃO --- (Sem alterações, igual v9.3)
+        // --- FUNÇÕES DE IMPORTAÇÃO ---
         function handleFileSelect(event, processorFn) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { processorFn(e.target.result); } catch (error) { console.error(`Erro ${file.name}:`, error); alert(`Erro ao processar ${file.name}: ${error.message}`); } finally { event.target.value = null; } }; reader.onerror = () => { alert('Erro ao ler arquivo.'); event.target.value = null; }; reader.readAsText(file, 'UTF-8'); }
         function parseCSV(csvString) { console.log("[parseCSV v2] Iniciando parse..."); let content = csvString.trim(); if (content.charCodeAt(0) === 0xFEFF) { console.log("[parseCSV v2] BOM detectado e removido."); content = content.substring(1); } const lines = content.split(/\r?\n/); if (lines.length < 2) { throw new Error("CSV inválido ou vazio (cabeçalho + dados)."); } const headerLine = lines[0]; console.log("[parseCSV v2] Linha Cabeçalho:", JSON.stringify(headerLine)); const headers = headerLine.split(',').map(h => h.trim().toLowerCase()); console.log("[parseCSV v2] Cabeçalhos Processados:", headers); const data = []; const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/; for (let i = 1; i < lines.length; i++) { const line = lines[i].trim(); if (line === '') continue; const values = line.split(regex).map(val => { let cleanedVal = val.trim(); if (cleanedVal.startsWith('"') && cleanedVal.endsWith('"')) { cleanedVal = cleanedVal.substring(1, cleanedVal.length - 1).replace(/""/g, '"'); } return cleanedVal; }); if (values.length !== headers.length) { console.warn(`[parseCSV v2] Linha ${i+1} ignorada: colunas (${values.length}) != cabeçalho (${headers.length}). Linha: "${line}" \n Valores:`, values); continue; } const rowObject = {}; for (let j = 0; j < headers.length; j++) { rowObject[headers[j]] = values[j]; } data.push(rowObject); } console.log("[parseCSV v2] Parse concluído. Objetos:", data); return data; }
         function processLevaData(csvContent) { const pD=parseCSV(csvContent); if (!pD || pD.length === 0) throw new Error("CSV de Levas vazio ou inválido após parse."); const eH=["id_leva","data_inicio_agregacao","cor","linhas_celulares","nome_protocolo"]; const aH=Object.keys(pD[0]); console.log("[processLevaData] Cabeçalhos reais:", aH); console.log("[processLevaData] Cabeçalhos esperados:", eH); for (const e of eH) { if (!aH.includes(e)) { console.error(`[processLevaData] Falha ao encontrar: "${e}"`); throw new Error(`Cabeçalho esperado "${e}" não encontrado (Levas). Encontrados: [${aH.join(', ')}]`); } } const iL=[]; pD.forEach((r, idx)=>{ const id = r["id_leva"]?.trim(); const startDateStr = r["data_inicio_agregacao"]?.trim(); const color = r["cor"]?.trim() || '#cccccc'; const cellLines = r["linhas_celulares"]?.trim() || ''; const protocolName = r["nome_protocolo"]?.trim(); if (!id || !startDateStr || !protocolName) { console.warn(`Leva L${idx + 2} ignorada.`); return; } if (!/^\d{4}-\d{2}-\d{2}$/.test(startDateStr)) { console.warn(`Leva "${id}" L${idx + 2} ignorada: Data inválida.`); return; } iL.push({ id, startDate: startDateStr, color, protocolName, cellLines }); }); if (iL.length === 0) { alert("Nenhuma leva válida no CSV."); return; } if (confirm(`Importar ${iL.length} levas do CSV? (Substitui atuais)`)) { levas = iL; sortDataArrays(); saveData(); renderAllLists(); updateCollectionLevaCheckboxes(); alert("Levas importadas!") } }
@@ -223,7 +222,7 @@
             });
         }
 
-        // *** FUNÇÃO HELPER REUTILIZÁVEL (v9.5 - Lógica Troca com Freq. Seg/Sex) ***
+        // *** FUNÇÃO HELPER REUTILIZÁVEL (v9.5.1) ***
         function getDailyLevaInfo(currentDateUTC, leva, currentLastMediaChangeDates) {
             const levaStartDate = new Date(leva.startDate + 'T00:00:00Z');
             const currentDateStartOfDay = new Date(Date.UTC(currentDateUTC.getUTCFullYear(), currentDateUTC.getUTCMonth(), currentDateUTC.getUTCDate()));
@@ -298,7 +297,10 @@
             }
 
             if (performMediaChange && currentLastMediaChangeDates && currentDateUTC) {
-                currentLastMediaChangeDates[leva.id] = new Date(currentDateUTC);
+                // Certifique-se de que currentLastMediaChangeDates[leva.id] existe antes de atribuir
+                if (typeof currentLastMediaChangeDates[leva.id] === 'undefined' || currentLastMediaChangeDates[leva.id].getTime() !== new Date(currentDateUTC).getTime()) {
+                    currentLastMediaChangeDates[leva.id] = new Date(currentDateUTC);
+                }
             }
 
             const dailyCollections = collections.filter(c => c.day === dayX && Array.isArray(c.levaIds) && c.levaIds.includes(leva.id));
@@ -307,7 +309,7 @@
             return { dayX, finalTask, finalMedium, dailyCollections };
         }
 
-        // *** GERAÇÃO DO CALENDÁRIO VISUAL (v9.5 - Fix Data Mobile + Filtro Range + Coletas) ***
+        // *** GERAÇÃO DO CALENDÁRIO VISUAL (v9.5.1) ***
         function generateCalendar() {
             const sDStr=gId('calendar-start-date').value, eDStr=gId('calendar-end-date').value;
             const outputDiv = gId('calendar-output'); const desktopDiv = outputDiv.querySelector('.desktop-calendar'); const mobileDiv = outputDiv.querySelector('.mobile-calendar'); const placeholder = gId('calendar-placeholder');
@@ -407,21 +409,40 @@
         function downloadFile(f,c,m){const b=new Blob([c],{type:m+';charset=utf-8'});const u=URL.createObjectURL(b);const a=cE('a');a.href=u;a.download=f;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);}
         function escapeCsvField(f) { if(f===null||f===undefined)return'""'; const s=String(f); if(s.includes(',')||s.includes('"')||s.includes('\n'))return`"${s.replace(/"/g,'""')}"`; return s; }
 
-        // *** showTasksTodayInNewTab ATUALIZADA (v9.5 - Adiciona Cor + Simulação Precisa) ***
+        // *** showTasksTodayInNewTab CORRIGIDA (v9.5.1 - Simulação Global Precisa) ***
         function showTasksTodayInNewTab() {
             const today = new Date();
             const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate(), 12, 0, 0));
             const todayStr = today.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
             let tasksFound = false;
+
             let tempLastChanges = {};
             levas.forEach(lv => {
                 const levaStartDate = new Date(lv.startDate + 'T00:00:00Z');
-                let currentDateSim = new Date(levaStartDate);
-                let simLastChange = new Date(levaStartDate); simLastChange.setUTCDate(levaStartDate.getUTCDate() + 3);
-                let simState = { [lv.id]: simLastChange };
-                while (currentDateSim < todayUTC) { getDailyLevaInfo(currentDateSim, lv, simState); currentDateSim.setUTCDate(currentDateSim.getUTCDate() + 1); }
-                tempLastChanges[lv.id] = simState[lv.id];
+                const initialChangeDate = new Date(levaStartDate);
+                initialChangeDate.setUTCDate(levaStartDate.getUTCDate() + 3);
+                tempLastChanges[lv.id] = initialChangeDate;
             });
+
+            let overallStartDate = null;
+            if (levas.length > 0) {
+                overallStartDate = new Date( Math.min(...levas.map(l => new Date(l.startDate + 'T00:00:00Z').getTime())) );
+            }
+
+            if (overallStartDate) {
+                let currentDateSim = new Date(overallStartDate);
+                while (currentDateSim < todayUTC) {
+                    levas.forEach(lv => {
+                        const levaStartDate = new Date(lv.startDate + 'T00:00:00Z');
+                        if (currentDateSim >= levaStartDate) {
+                            getDailyLevaInfo(currentDateSim, lv, tempLastChanges);
+                        }
+                    });
+                    currentDateSim.setUTCDate(currentDateSim.getUTCDate() + 1);
+                }
+            }
+            // console.log("[showTasksToday v9.5.1] Estado simulado lastMediaChangeDates para hoje:", JSON.parse(JSON.stringify(tempLastChanges)));
 
             let htmlContent = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Tarefas de Hoje - ${todayStr}</title>
             <style>
@@ -432,11 +453,17 @@
             levas.forEach(leva => {
                 const dailyInfo = getDailyLevaInfo(todayUTC, leva, tempLastChanges);
                 if (dailyInfo) {
-                    tasksFound = true; const { dayX, finalTask, finalMedium, dailyCollections } = dailyInfo;
+                    tasksFound = true;
+                    const { dayX, finalTask, finalMedium, dailyCollections } = dailyInfo;
                     htmlContent += `<div class="leva-section"><h2><span class="leva-color-swatch" style="background-color:${leva.color};"></span><span class="leva-title-text">Leva ${leva.id} (Dia ${dayX}) <small>(${leva.cellLines || 'N/A'})</small></span></h2>`;
                     if (finalTask !== '-') htmlContent += `<div class="task-item"><span class="task-label">Tarefa:</span> ${finalTask}</div>`;
                     if (finalMedium !== '-') htmlContent += `<div class="task-item"><span class="task-label">Meio:</span> ${finalMedium}</div>`;
-                    if(dailyCollections && dailyCollections.length > 0) { dailyCollections.forEach(col => { if(col) { htmlContent += `<div class="collection-item"><span class="task-label">Coleta:</span> <span class="collection-details">${col.exp || 'Coleta'}: ${col.qty || 'N/A'}</span></div>`; } else { console.warn(`[showTasksToday] Objeto coleta inválido para Leva ${leva.id} Dia ${dayX}`); } }); }
+                    if(dailyCollections && dailyCollections.length > 0) {
+                        dailyCollections.forEach(col => {
+                            if(col) { htmlContent += `<div class="collection-item"><span class="task-label">Coleta:</span> <span class="collection-details">${col.exp || 'Coleta'}: ${col.qty || 'N/A'}</span></div>`; }
+                            else { console.warn(`[showTasksToday] Objeto coleta inválido para Leva ${leva.id} Dia ${dayX}`); }
+                        });
+                    }
                     htmlContent += `</div>`;
                 }
             });
@@ -447,6 +474,7 @@
             if (newTab) { newTab.document.open(); newTab.document.write(htmlContent); newTab.document.close(); newTab.focus(); }
             else { alert('Não foi possível abrir a nova aba. Verifique se o navegador bloqueou pop-ups.'); }
         }
+
 
         function exportDataJson() { const dE={levas,protocols,collections}; const jS=JSON.stringify(dE,null,2); downloadFile('cronograma_organoides_dados.json',jS,'application/json'); }
         function exportScheduleCsv() {
